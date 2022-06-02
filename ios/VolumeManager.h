@@ -1,5 +1,6 @@
 #import <React/RCTBridgeModule.h>
+#import <React/RCTEventEmitter.h>
 
-@interface VolumeManager : NSObject <RCTBridgeModule>
+@interface VolumeManager : RCTEventEmitter <RCTBridgeModule>
 
 @end
