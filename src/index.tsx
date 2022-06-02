@@ -54,7 +54,7 @@ const eventEmitter = new NativeEventEmitter(VolumeManagerNativeModule);
 export async function getVolume(
   type: AndroidVolumeTypes = 'music'
 ): Promise<VolumeResult> {
-  return await VolumeManager.getVolume(type);
+  return await VolumeManagerNativeModule.getVolume(type);
 }
 
 /**
@@ -80,11 +80,11 @@ export function setVolume(
     },
     config
   );
-  VolumeManager.setVolume(value, config);
+  VolumeManagerNativeModule.setVolume(value, config);
 }
 
 export function addListener(
-  callback: (...arg: any[]) => void
+  callback: (...arg: any[]) => VolumeResult
 ): EmitterSubscription {
   return eventEmitter.addListener('EventVolume', callback);
 }
