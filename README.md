@@ -1,6 +1,6 @@
-# react-native-volume-manager
-
 ![Drag Racing](gh-banner.png)
+
+# react-native-volume-manager
 
 This native package adds the ability to change the system volume on iOS and Android, listen to volume changes and suppress the native volume UI to build your own volume slider and UX. It also provides a simple API to get the current volume level.
 
