@@ -108,6 +108,16 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
         promise.resolve(getNormalizationVolume(type));
     }
 
+    @ReactMethod
+    public void addListener(String eventName) {
+      // Keep: Required for RN built in Event Emitter Calls.
+    }
+
+    @ReactMethod
+    public void removeListeners(int count) {
+      // Keep: Required for RN built in Event Emitter Calls.
+    }
+
     private float getNormalizationVolume(String type) {
         int volType = getVolType(type);
         return am.getStreamVolume(volType) * 1.0f / am.getStreamMaxVolume(volType);
