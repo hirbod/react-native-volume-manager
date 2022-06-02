@@ -6,13 +6,15 @@ Adds the ability to change the system volume on iOS and Android, listen to volum
 
 ```sh
 npm install react-native-volume-manager
+```
 
 or
 
+```sh
 yarn add react-native-volume-manager
 ```
 
-## API usage
+## Quick usage overview
 
 ```tsx
 import VolumeManager from 'react-native-volume-manager';
@@ -20,7 +22,7 @@ import VolumeManager from 'react-native-volume-manager';
 // ...
 
 // set volume
-VolumeManager.setVolume(0.5);
+VolumeManager.setVolume(0.5); // float value between 0 and 1
 
 // set volume with extra options
 VolumeManager.setVolume(0.5, {
@@ -52,6 +54,16 @@ useEffect(() => {
 })
 
 ```
+
+## API
+
+| Method                                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Volume**                            |
+| getVolume(type:string) => Promise     | Get the system volume. <br><br>`type` must be one of `music`, `call`, `system`, `ring`, `alarm`, `notification`, default is `music`. (Android only), iOS will always report the system volume                                                                                                                                                                                                                                                                                             |
+| setVolume(value:float, config:object) | Set the system volume by specified value, from 0 to 1. 0 for mute, and 1 for the max volume.<br><br> `config` can be `{type: 'music', playSound:true, showUI:true}`<br><br> `type` : must be one of `music`, `call`, `system`, `ring`, `alarm`, `notification`, default is `music`. (Android only) <br>`playSound`: Whether to play a sound when changing the volume, default is `false` (Android only)<br>`showUI`: Show the native system volume UI, default is `false` (Android & iOS) |
+| addListener(callback)                 | Listen the volume changing, and it will return the listener.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `listener.remove()`                   | Remove the listener when you don't need it anymore. Store the return of `const listener = VolumeManager.addListener()` in a variable and call it with `.remove()`. See the example above.                                                                                                                                                                                                                                                                                                 |
 
 ## Contributing
 
