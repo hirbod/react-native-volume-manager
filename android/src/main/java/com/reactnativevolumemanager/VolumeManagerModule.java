@@ -42,27 +42,27 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
     public VolumeManagerModule(ReactApplicationContext reactContext) {
 
-      super(reactContext);
-      mContext = reactContext;
-      reactContext.addLifecycleEventListener(this);
-      am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-      volumeBR = new VolumeBroadcastReceiver();
+        super(reactContext);
+        mContext = reactContext;
+        reactContext.addLifecycleEventListener(this);
+        am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        volumeBR = new VolumeBroadcastReceiver();
     }
 
-  private void registerVolumeReceiver() {
-    if (!volumeBR.isRegistered()) {
-      IntentFilter filter = new IntentFilter("android.media.VOLUME_CHANGED_ACTION");
-      mContext.registerReceiver(volumeBR, filter);
-      volumeBR.setRegistered(true);
+    private void registerVolumeReceiver() {
+        if (!volumeBR.isRegistered()) {
+            IntentFilter filter = new IntentFilter("android.media.VOLUME_CHANGED_ACTION");
+            mContext.registerReceiver(volumeBR, filter);
+            volumeBR.setRegistered(true);
+        }
     }
-  }
 
-  private void unregisterVolumeReceiver() {
-    if (volumeBR.isRegistered()) {
-      mContext.unregisterReceiver(volumeBR);
-      volumeBR.setRegistered(false);
+    private void unregisterVolumeReceiver() {
+        if (volumeBR.isRegistered()) {
+            mContext.unregisterReceiver(volumeBR);
+            volumeBR.setRegistered(false);
+        }
     }
-  }
 
     @Override
     @NonNull
@@ -70,123 +70,123 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
         return NAME;
     }
 
-  @ReactMethod
-  public void setVolume(float val, ReadableMap config) {
-    unregisterVolumeReceiver();
-    String type = config.getString("type");
-    boolean playSound = config.getBoolean("playSound");
-    boolean showUI = config.getBoolean("showUI");
-    assert type != null;
-    int volType = getVolType(type);
-    int flags = 0;
-    if (playSound) {
-      flags |= AudioManager.FLAG_PLAY_SOUND;
-    }
-    if (showUI) {
-      flags |= AudioManager.FLAG_SHOW_UI;
-    }
-    try {
-      am.setStreamVolume(volType, (int) (val * am.getStreamMaxVolume(volType)), flags);
-    } catch (SecurityException e) {
-      if (val == 0) {
-        Log.w(TAG, "setVolume(0) failed. See https://github.com/c19354837/react-native-system-setting/issues/48");
-        NotificationManager notificationManager =
-          (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-          && !notificationManager.isNotificationPolicyAccessGranted()) {
-          Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-          mContext.startActivity(intent);
+    @ReactMethod
+    public void setVolume(float val, ReadableMap config) {
+        unregisterVolumeReceiver();
+        String type = config.getString("type");
+        boolean playSound = config.getBoolean("playSound");
+        boolean showUI = config.getBoolean("showUI");
+        assert type != null;
+        int volType = getVolType(type);
+        int flags = 0;
+        if (playSound) {
+            flags |= AudioManager.FLAG_PLAY_SOUND;
         }
-      }
-      Log.e(TAG, "err", e);
-    }
-    registerVolumeReceiver();
-  }
-
-  @ReactMethod
-  public void getVolume(String type, Promise promise) {
-    promise.resolve(getNormalizationVolume(type));
-  }
-
-  private float getNormalizationVolume(String type) {
-    int volType = getVolType(type);
-    return am.getStreamVolume(volType) * 1.0f / am.getStreamMaxVolume(volType);
-  }
-
-  private int getVolType(String type) {
-    switch (type) {
-      case VOL_VOICE_CALL:
-        return AudioManager.STREAM_VOICE_CALL;
-      case VOL_SYSTEM:
-        return AudioManager.STREAM_SYSTEM;
-      case VOL_RING:
-        return AudioManager.STREAM_RING;
-      case VOL_ALARM:
-        return AudioManager.STREAM_ALARM;
-      case VOL_NOTIFICATION:
-        return AudioManager.STREAM_NOTIFICATION;
-      default:
-        return AudioManager.STREAM_MUSIC;
-    }
-  }
-
-  @Override
-  public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-
-  }
-
-  @Override
-  public void onNewIntent(Intent intent) {
-
-  }
-
-  @Override
-  public void onHostResume() {
-    registerVolumeReceiver();
-  }
-
-  @Override
-  public void onHostPause() {
-    unregisterVolumeReceiver();
-  }
-
-  @Override
-  public void onHostDestroy() {
-
-  }
-
-
-  private class VolumeBroadcastReceiver extends BroadcastReceiver {
-
-    private boolean isRegistered = false;
-
-    public void setRegistered(boolean registered) {
-      isRegistered = registered;
+        if (showUI) {
+            flags |= AudioManager.FLAG_SHOW_UI;
+        }
+        try {
+            am.setStreamVolume(volType, (int)(val * am.getStreamMaxVolume(volType)), flags);
+        } catch (SecurityException e) {
+            if (val == 0) {
+                Log.w(TAG, "setVolume(0) failed. See https://github.com/c19354837/react-native-system-setting/issues/48");
+                NotificationManager notificationManager =
+                    (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    !notificationManager.isNotificationPolicyAccessGranted()) {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                    mContext.startActivity(intent);
+                }
+            }
+            Log.e(TAG, "err", e);
+        }
+        registerVolumeReceiver();
     }
 
-    public boolean isRegistered() {
-      return isRegistered;
+    @ReactMethod
+    public void getVolume(String type, Promise promise) {
+        promise.resolve(getNormalizationVolume(type));
+    }
+
+    private float getNormalizationVolume(String type) {
+        int volType = getVolType(type);
+        return am.getStreamVolume(volType) * 1.0f / am.getStreamMaxVolume(volType);
+    }
+
+    private int getVolType(String type) {
+        switch (type) {
+            case VOL_VOICE_CALL:
+                return AudioManager.STREAM_VOICE_CALL;
+            case VOL_SYSTEM:
+                return AudioManager.STREAM_SYSTEM;
+            case VOL_RING:
+                return AudioManager.STREAM_RING;
+            case VOL_ALARM:
+                return AudioManager.STREAM_ALARM;
+            case VOL_NOTIFICATION:
+                return AudioManager.STREAM_NOTIFICATION;
+            default:
+                return AudioManager.STREAM_MUSIC;
+        }
     }
 
     @Override
-    public void onReceive(Context context, Intent intent) {
-      if (intent.getAction().equals("android.media.VOLUME_CHANGED_ACTION")) {
-        WritableMap para = Arguments.createMap();
-        para.putDouble("value", getNormalizationVolume(VOL_MUSIC));
-        para.putDouble(VOL_VOICE_CALL, getNormalizationVolume(VOL_VOICE_CALL));
-        para.putDouble(VOL_SYSTEM, getNormalizationVolume(VOL_SYSTEM));
-        para.putDouble(VOL_RING, getNormalizationVolume(VOL_RING));
-        para.putDouble(VOL_MUSIC, getNormalizationVolume(VOL_MUSIC));
-        para.putDouble(VOL_ALARM, getNormalizationVolume(VOL_ALARM));
-        para.putDouble(VOL_NOTIFICATION, getNormalizationVolume(VOL_NOTIFICATION));
-        try {
-          mContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-            .emit("EventVolume", para);
-        } catch (RuntimeException e) {
-          // Possible to interact with volume before JS bundle execution is finished.
-          // This is here to avoid app crashing.
-        }
-      }
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+
     }
-  }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+
+    }
+
+    @Override
+    public void onHostResume() {
+        registerVolumeReceiver();
+    }
+
+    @Override
+    public void onHostPause() {
+        unregisterVolumeReceiver();
+    }
+
+    @Override
+    public void onHostDestroy() {
+
+    }
+
+
+    private class VolumeBroadcastReceiver extends BroadcastReceiver {
+
+        private boolean isRegistered = false;
+
+        public void setRegistered(boolean registered) {
+            isRegistered = registered;
+        }
+
+        public boolean isRegistered() {
+            return isRegistered;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("android.media.VOLUME_CHANGED_ACTION")) {
+                WritableMap para = Arguments.createMap();
+                para.putDouble("volume", getNormalizationVolume(VOL_MUSIC));
+                para.putDouble(VOL_VOICE_CALL, getNormalizationVolume(VOL_VOICE_CALL));
+                para.putDouble(VOL_SYSTEM, getNormalizationVolume(VOL_SYSTEM));
+                para.putDouble(VOL_RING, getNormalizationVolume(VOL_RING));
+                para.putDouble(VOL_MUSIC, getNormalizationVolume(VOL_MUSIC));
+                para.putDouble(VOL_ALARM, getNormalizationVolume(VOL_ALARM));
+                para.putDouble(VOL_NOTIFICATION, getNormalizationVolume(VOL_NOTIFICATION));
+                try {
+                    mContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("EventVolume", para);
+                } catch (RuntimeException e) {
+                    // Possible to interact with volume before JS bundle execution is finished.
+                    // This is here to avoid app crashing.
+                }
+            }
+        }
+    }
 }

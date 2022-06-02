@@ -25,7 +25,15 @@ export interface VolumeManagerSetVolumeConfig {
   showUI?: boolean;
 }
 export interface VolumeResult {
-  volume: number; // returns a value between 0 and 1 (float)
+  /** iOS and Android */
+  volume: number;
+  /** Android only result types */
+  alarm?: number;
+  call?: number;
+  music?: number;
+  notification?: number;
+  ring?: number;
+  system?: number;
 }
 
 const VolumeManagerNativeModule = NativeModules.VolumeManager
