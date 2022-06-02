@@ -84,11 +84,10 @@ export function setVolume(
 }
 
 export function addListener(
-  callback: (...arg: any[]) => VolumeResult
+  callback: (result: VolumeResult) => void
 ): EmitterSubscription {
   return eventEmitter.addListener('EventVolume', callback);
 }
 
 export const VolumeManager = { addListener, getVolume, setVolume };
-
 export default VolumeManager;
