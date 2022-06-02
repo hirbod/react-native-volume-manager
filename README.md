@@ -1,20 +1,30 @@
 # react-native-volume-manager
 
-Adds the ability to change the system volume on iOS and Android, listen to volume changes and supress the native volume UI to build your own volume slider or UX.
+![Drag Racing](gh-banner.png)
+
+This native package adds the ability to change the system volume on iOS and Android, listen to volume changes and suppress the native volume UI to build your own volume slider and UX. It also provides a simple API to get the current volume level.
 
 ## Installation
 
 ```sh
+# Using npm
 npm install react-native-volume-manager
-```
 
-or
-
-```sh
+# using yarn
 yarn add react-native-volume-manager
 ```
 
-## Quick usage overview
+#### Using React Native >= 0.60
+
+Linking the package manually is not required anymore with [Autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md).
+
+## Expo
+
+This library adds native code. It does not work with _Expo Go_ but you can easily install it using a [custom dev client](https://docs.expo.dev/development/getting-started/). Thats how it should be done in 2022 :).
+
+**No config plugin required.**
+
+## Usage 🚀
 
 ```tsx
 import VolumeManager from 'react-native-volume-manager';
@@ -33,13 +43,13 @@ VolumeManager.setVolume(0.5, {
 
 // get volume async, type defaults to "music" (Android only)
 // iOS has only one type of Volume (system)
+// see down below for more types
 const { volume } = await VolumeManager.getVolume(type: 'music');
 
 // or the oldschool way
 VolumeManager.getVolume.then((result) => {
   console.log(result.volume); // returns the current volume as a float (0-1)
 });
-
 
 // listen to volume changes
 useEffect(() => {
@@ -52,8 +62,29 @@ useEffect(() => {
       // remove listener
       volumeListener.remove();
   }
-})
+}, []);
 
+// or with useFocusEffect from react-navigation
+useFocusEffect(
+  React.useCallback(() => {
+    const volumeListener = VolumeManager.addListener(async (data) => {
+      if (Platform.OS === 'ios') {
+        try {
+          // once we detected a user on iOS triggered volume change,
+          // we can change the audio mode to allow playback even when the
+          // silent switch is activated.
+          // This example requires expo-av
+          await Audio.setAudioModeAsync({
+            playsInSilentModeIOS: true,
+          });
+        } catch {}
+      }
+    });
+    return function blur() {
+      volumeListener.remove();
+    };
+  }, [])
+);
 ```
 
 ## API
@@ -74,6 +105,6 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 MIT
 
-## Thanks
+## Special thanks
 
 Based on https://github.com/c19354837/react-native-system-setting, rewritten to TS and optimized for current React Native versions.
