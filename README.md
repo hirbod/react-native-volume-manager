@@ -41,12 +41,13 @@ VolumeManager.getVolume.then((result) => {
 });
 
 
+// listen to volume changes
 useEffect(() => {
-  // listen to volume changes
   const volumeListener = VolumeManager.addListener((result) => {
     console.log(result.volume); // returns the current volume as a float (0-1)
   });
 
+  // clean up function
   return function () {
       // remove listener
       volumeListener.remove();
