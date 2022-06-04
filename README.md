@@ -291,7 +291,7 @@ import {
   checkDndAccess,
   requestDndAccess,
   RingerModeType,
-} from 'react-native-ringer-mode';
+} from 'react-native-volume-manager';
 
 export default function App() {
   const { mode, setMode } = useRingerMode();
