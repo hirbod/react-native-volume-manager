@@ -115,8 +115,6 @@ useFocusEffect(
 
 ## iOS mute switch listener
 
----
-
 There is no native iOS API to detect if the mute switch is enabled/disabled on a device.
 
 The general principle to check if the device is muted is to play a short sound without audio and detect the length it took to play. Has a trigger rate of 1 second.
