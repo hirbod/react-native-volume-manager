@@ -100,7 +100,7 @@ RCT_EXTERN_METHOD(setMuteListenerInterval: (nonnull NSNumber *) newInterval)
     if (object == [AVAudioSession sharedInstance] && [keyPath isEqualToString:@"outputVolume"]) {
         float newValue = [change[@"new"] floatValue];
         if (skipSetVolumeCount == 0 && hasListeners) {
-            [self sendEventWithName:@"EventVolume"
+            [self sendEventWithName:@"RNVMEventVolume"
                                body:@{@"volume": [NSNumber numberWithFloat:newValue]}];
         }
         if (skipSetVolumeCount > 0) {

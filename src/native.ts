@@ -7,6 +7,7 @@ import {
 import type {
   AndroidVolumeTypes,
   eventCallback,
+  RingerEventCallback,
   RingerModeType,
   setCheckIntervalType,
   VolumeManagerSetVolumeConfig,
@@ -42,9 +43,7 @@ const SilentListenerNativeModule = NativeModules.VolumeManagerSilentListener
     );
 
 const eventEmitter = new NativeEventEmitter(VolumeManagerNativeModule);
-const silentEventEmitter = new NativeEventEmitter(
-  Platform.OS === 'ios' ? SilentListenerNativeModule : VolumeManagerNativeModule
-);
+const silentEventEmitter = new NativeEventEmitter(SilentListenerNativeModule);
 
 const isAndroid = Platform.OS === 'android';
 
@@ -94,7 +93,7 @@ export async function requestDndAccess(): Promise<boolean | undefined> {
  */
 export async function getVolume(
   type: AndroidVolumeTypes = 'music'
-): Promise<VolumeResult> {
+): Promise<VolumeResult | number> {
   return await VolumeManagerNativeModule.getVolume(type);
 }
 
@@ -126,7 +125,7 @@ export async function setVolume(
   return await VolumeManagerNativeModule.setVolume(value, config);
 }
 
-export function addListener(
+export function addVolumeListener(
   callback: (result: VolumeResult) => void
 ): EmitterSubscription {
   return eventEmitter.addListener('RNVMEventVolume', callback);
@@ -141,11 +140,38 @@ const setNativeSilenceCheckInterval: setCheckIntervalType = (value: number) => {
   SilentListenerNativeModule.setInterval(value);
 };
 
+// Ringer mode listener
+
+const isRingerListenerEnabled = (): Promise<boolean> => {
+  if (Platform.OS === 'android') {
+    return SilentListenerNativeModule.isEnabled();
+  }
+  return Promise.resolve(true);
+};
+
+const addRingerListener = (callback: RingerEventCallback) => {
+  if (Platform.OS === 'android') {
+    SilentListenerNativeModule.registerObserver();
+    return silentEventEmitter.addListener('RNVMSilentEvent', callback);
+  }
+  return null;
+};
+
+const removeRingerListener = (listener: EmitterSubscription | null): void => {
+  if (Platform.OS === 'android') {
+    SilentListenerNativeModule.unregisterObserver();
+    listener && listener.remove();
+  }
+};
+
 export const VolumeManager = {
-  addListener,
+  addVolumeListener,
   getVolume,
   setVolume,
+  isRingerListenerEnabled,
   addSilentListener,
+  addRingerListener,
+  removeRingerListener,
   setNativeSilenceCheckInterval,
 };
 

@@ -101,10 +101,14 @@ useFocusEffect(
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
+## Special thanks
+
+- Uses code from https://github.com/c19354837/react-native-system-setting
+- Uses code from https://github.com/vitorverasm/react-native-silent
+- Uses code from https://github.com/GeorgyMishin/react-native-silent-listener
+
+I used these libraries to make this library work on Android and iOS and to have a unified library which does everything related to Volume.
+
 ## License
 
 MIT
-
-## Special thanks
-
-Based on https://github.com/c19354837/react-native-system-setting, rewritten to TS and optimized for current React Native versions.

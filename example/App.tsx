@@ -1,16 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-  Button,
-  Platform,
-} from 'react-native';
+import { StyleSheet, Text, View, Button, Platform } from 'react-native';
 import {
   VolumeManager,
   useRingerMode,
   RINGER_MODE,
+  RingerSilentStatus,
+  VolumeResult,
 } from 'react-native-volume-manager';
 import Slider from '@react-native-community/slider';
 
@@ -21,36 +16,42 @@ const modeText = {
 };
 
 export default function App() {
-  const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
+  const [currentSystemVolume, setReportedSystemVolume] = useState<
+    VolumeResult | number
+  >(0);
   const [isMuted, setIsMuted] = useState<boolean>();
+  const [ringerStatus, setRingerStatus] = useState<RingerSilentStatus>();
 
   useEffect(() => {
     VolumeManager.getVolume('music').then((result) => {
       setReportedSystemVolume(result);
-      console.log('Trying to read current volume', result);
+      console.log('Read system volume', result);
     });
 
-    const volumeListener = VolumeManager.addListener((result) => {
+    const volumeListener = VolumeManager.addVolumeListener((result) => {
       setReportedSystemVolume(result.volume);
       console.log('Volume changed', result);
     });
 
-    const silentListener = VolumeManager.addSilentListener((isMuted) => {
-      setIsMuted(isMuted);
+    const silentListener = VolumeManager.addSilentListener((status) => {
+      console.log(status);
+      setIsMuted(status);
+    });
+
+    const ringerListener = VolumeManager.addRingerListener((result) => {
+      console.log('Ringer listener changed', result);
+      setRingerStatus(result);
     });
 
     return () => {
       // remove
       volumeListener.remove();
       silentListener.remove();
+      VolumeManager.removeRingerListener(ringerListener);
     };
   }, []);
 
   const { mode, error, setMode } = useRingerMode();
-
-  const setVolume = () => {
-    VolumeManager.setVolume(0.1, { showUI: true });
-  };
 
   return (
     <View style={styles.container}>
@@ -64,10 +65,6 @@ export default function App() {
       <View style={styles.col}>
         <Text>Is muted?:</Text>
         <Text>{currentSystemVolume <= 0 ? 'YES' : 'NO'}</Text>
-      </View>
-      <View style={styles.col}>
-        <Text>Silent switch active?:</Text>
-        <Text>{isMuted ? 'YES' : 'NO'}</Text>
       </View>
 
       <View>
@@ -83,7 +80,7 @@ export default function App() {
           await VolumeManager.setVolume(value, { showUI: true });
           setReportedSystemVolume(value);
         }}
-        value={currentSystemVolume}
+        value={currentSystemVolume as number}
       />
 
       <View>
@@ -99,15 +96,34 @@ export default function App() {
           await VolumeManager.setVolume(value, { showUI: false });
           setReportedSystemVolume(value);
         }}
-        value={currentSystemVolume}
+        value={currentSystemVolume as number}
       />
+
+      <View>
+        <Text style={styles.headline}>iOS only features</Text>
+      </View>
+      <View style={styles.col}>
+        <Text>Silent switch active?:</Text>
+        <Text>
+          {Platform.OS === 'ios'
+            ? isMuted
+              ? 'YES'
+              : 'NO'
+            : 'Unsupported on Android'}
+        </Text>
+      </View>
 
       <View>
         <Text style={styles.headline}>Android only features</Text>
       </View>
 
       <View style={styles.col}>
-        <Text>Ringer Mode:</Text>
+        <Text>Ringer Mode listener:</Text>
+        <Text>{ringerStatus?.mode}</Text>
+      </View>
+
+      <View style={styles.col}>
+        <Text>Selected Ringer Mode:</Text>
         <Text>
           {mode !== undefined
             ? modeText[mode]
@@ -116,9 +132,15 @@ export default function App() {
             : 'Unknown'}
         </Text>
       </View>
-      <View style={styles.col}>
+      <View style={{ marginTop: 20 }}>
         <Text>Set Ringer mode:</Text>
-        <View>
+        <View
+          style={{
+            marginTop: 20,
+            height: 120,
+            justifyContent: 'space-between',
+          }}
+        >
           <Button title="Silent" onPress={() => setMode(RINGER_MODE.silent)} />
           <Button title="Normal" onPress={() => setMode(RINGER_MODE.normal)} />
           <Button
@@ -131,7 +153,13 @@ export default function App() {
       <View>
         <View />
 
-        <View>
+        <View
+          style={{
+            marginTop: 10,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Text>{error?.message}</Text>
         </View>
       </View>
@@ -155,7 +183,7 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginVertical: 20,
+    marginVertical: 10,
   },
   headline2: {
     fontSize: 16,

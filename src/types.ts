@@ -50,3 +50,25 @@ export const RINGER_MODE = {
 // Ringer Mode type definition
 type ValueOf<T> = T[keyof T];
 export type RingerModeType = ValueOf<typeof RINGER_MODE>;
+
+/**
+ * ## MODE
+ *
+ * - SILENT: When device is in do not disturb mode
+ * - VIBRATE: When device is in vibrate mode
+ * - NORMAL: When device is in normal noisy mode
+ * - MUTED: When device is with volume 0
+ */
+export enum Mode {
+  SILENT = 'SILENT',
+  VIBRATE = 'VIBRATE',
+  NORMAL = 'NORMAL',
+  MUTED = 'MUTED',
+}
+
+export type RingerSilentStatus = {
+  status: boolean;
+  mode: Mode;
+};
+
+export type RingerEventCallback = (event: RingerSilentStatus) => void;

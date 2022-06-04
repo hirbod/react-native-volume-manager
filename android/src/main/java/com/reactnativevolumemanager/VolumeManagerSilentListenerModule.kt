@@ -7,9 +7,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import com.facebook.react.bridge.*
+import com.facebook.react.module.annotations.ReactModule
 
-
+@ReactModule(name = VolumeManagerSilentListenerModule.TAG)
 class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+  companion object {
+    const val TAG = "VolumeManagerSilentListener"
+  }
   private val audioManager: AudioManager = reactApplicationContext.getSystemService(AUDIO_SERVICE) as AudioManager
   private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -22,7 +26,17 @@ class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) :
   }
 
   override fun getName(): String {
-    return "VolumeManagerSilentListener"
+    return TAG
+  }
+
+  @ReactMethod
+  fun addListener(eventName: String?) {
+    // Keep: Required for RN built in Event Emitter Calls.
+  }
+
+  @ReactMethod
+  fun removeListeners(count: Int) {
+    // Keep: Required for RN built in Event Emitter Calls.
   }
 
   @ReactMethod
