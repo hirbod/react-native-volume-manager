@@ -58,6 +58,8 @@ RCT_EXPORT_METHOD(getVolume:(NSString *)type resolve:(RCTPromiseResolveBlock)res
     });
 }
 
+RCT_EXTERN_METHOD(setMuteListenerInterval: (nonnull NSNumber *) newInterval)
+
 -(void)showVolumeUI:(BOOL)flag{
     if(flag && [volumeView superview]){
         [volumeView removeFromSuperview];
@@ -68,7 +70,7 @@ RCT_EXPORT_METHOD(getVolume:(NSString *)type resolve:(RCTPromiseResolveBlock)res
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"EventVolume"];
+    return @[@"RNVMEventVolume"];
 }
 
 -(void)startObserving {

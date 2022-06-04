@@ -32,10 +32,10 @@ import VolumeManager from 'react-native-volume-manager';
 // ...
 
 // set volume
-VolumeManager.setVolume(0.5); // float value between 0 and 1
+await VolumeManager.setVolume(0.5); // float value between 0 and 1
 
 // set volume with extra options
-VolumeManager.setVolume(0.5, {
+await VolumeManager.setVolume(0.5, {
   type: 'system', // defaults to "music" (Android only)
   showUI: true, // defaults to false, can surpress the native UI Volume Toast (iOS & Android)
   playSound: false, // defaults to false (when pushing hardware buttons) (Android only)

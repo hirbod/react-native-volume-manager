@@ -71,6 +71,49 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     }
 
     @ReactMethod
+    public void getRingerMode(Promise promise) {
+      int mode = am.getRingerMode();
+      promise.resolve(mode);
+    }
+
+    private boolean hasDndAccess() {
+      NotificationManager nm = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+      return (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || nm.isNotificationPolicyAccessGranted();
+    }
+
+    @ReactMethod
+    public void checkDndAccess(Promise promise) {
+      promise.resolve(hasDndAccess());
+    }
+
+    @ReactMethod
+    public void requestDndAccess(Promise promise) {
+      if (!hasDndAccess() && mContext.hasCurrentActivity()) {
+          Intent intent = new Intent(
+                              android.provider.Settings
+                              .ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+          intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+          Context context = mContext.getCurrentActivity().getApplicationContext();
+          context.startActivity(intent);
+          promise.resolve(true);
+      }
+
+      promise.resolve(false);
+    }
+
+    @ReactMethod
+    public void setRingerMode(int mode, Promise promise) {
+      try {
+        am.setRingerMode(mode);
+
+        promise.resolve(mode);
+      } catch (Exception err) {
+        promise.reject(err);
+      }
+    }
+
+    @ReactMethod
     public void setVolume(float val, ReadableMap config) {
         unregisterVolumeReceiver();
         String type = config.getString("type");
@@ -191,7 +234,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
                 para.putDouble(VOL_NOTIFICATION, getNormalizationVolume(VOL_NOTIFICATION));
                 try {
                     mContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                        .emit("EventVolume", para);
+                        .emit("RNVMEventVolume", para);
                 } catch (RuntimeException e) {
                     // Possible to interact with volume before JS bundle execution is finished.
                     // This is here to avoid app crashing.
