@@ -5,7 +5,6 @@ import {
   useRingerMode,
   RINGER_MODE,
   RingerSilentStatus,
-  VolumeResult,
 } from 'react-native-volume-manager';
 import Slider from '@react-native-community/slider';
 
@@ -16,15 +15,15 @@ const modeText = {
 };
 
 export default function App() {
-  const [currentSystemVolume, setReportedSystemVolume] = useState<
-    VolumeResult | number
-  >(0);
+  const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>();
   const [ringerStatus, setRingerStatus] = useState<RingerSilentStatus>();
 
   useEffect(() => {
     VolumeManager.getVolume('music').then((result) => {
-      setReportedSystemVolume(result);
+      setReportedSystemVolume(
+        typeof result === 'object' ? result.volume : result
+      );
       console.log('Read system volume', result);
     });
 
@@ -80,7 +79,7 @@ export default function App() {
           await VolumeManager.setVolume(value, { showUI: true });
           setReportedSystemVolume(value);
         }}
-        value={currentSystemVolume as number}
+        value={currentSystemVolume}
       />
 
       <View>
@@ -96,7 +95,7 @@ export default function App() {
           await VolumeManager.setVolume(value, { showUI: false });
           setReportedSystemVolume(value);
         }}
-        value={currentSystemVolume as number}
+        value={currentSystemVolume}
       />
 
       <View>
