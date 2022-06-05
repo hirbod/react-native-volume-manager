@@ -138,7 +138,7 @@ export function addVolumeListener(
 }
 
 // SilentListener related
-const addSilentListener = (
+export const addSilentListener = (
   callback: eventCallback
 ): EmitterSubscription | EmitterSubscriptionNoop => {
   if (Platform.OS === 'ios') {
@@ -148,7 +148,9 @@ const addSilentListener = (
   return noopEmitterSubscription;
 };
 
-const setNativeSilenceCheckInterval: setCheckIntervalType = (value: number) => {
+export const setNativeSilenceCheckInterval: setCheckIntervalType = (
+  value: number
+) => {
   if (Platform.OS === 'ios') {
     SilentListenerNativeModule.setInterval(value);
   }
