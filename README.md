@@ -1,4 +1,4 @@
-![Drag Racing](gh-banner.png)
+![React Native Volume Manager Ringer Mute Silent Switch](gh-banner.png)
 
 # react-native-volume-manager
 
@@ -27,8 +27,6 @@ Linking the package manually is not required anymore with [Autolinking](https://
 
 ## Expo
 
----
-
 This library adds native code. It does not work with _Expo Go_ but you can easily install it using a [custom dev client](https://docs.expo.dev/development/getting-started/). Thats how it should be done in 2022 :).
 
 **No config plugin required.**
@@ -42,26 +40,37 @@ import { VolumeManager } from 'react-native-volume-manager';
 
 // ...
 
-// set volume
+// set the volume, value between 0 and 1 (float)
 await VolumeManager.setVolume(0.5); // float value between 0 and 1
 
 // set volume with extra options
 await VolumeManager.setVolume(0.5, {
-  type: 'system', // defaults to "music" (Android only)
-  showUI: true, // defaults to false, can surpress the native UI Volume Toast (iOS & Android)
-  playSound: false, // defaults to false (Android only)
+  // defaults to "music" (Android only)
+  type: 'system',
+
+  // defaults to false, can surpress the native UI Volume Toast (iOS & Android)
+  showUI: true,
+
+  // defaults to false (Android only)
+  playSound: false,
 });
 
-// get volume async, type defaults to "music" (Android only)
-// iOS has only one type of Volume (system)
+// Get the current volume async, type defaults to "music"
+// (Android only, iOS only has one type of Volume)
 // see down below for more types
+// if you don't add a type, you'll get an object as a return on
+// Android with all Volume types
 const { volume } = await VolumeManager.getVolume(type: 'music');
 
-// or the oldschool way
+// The oldschool way
 VolumeManager.getVolume('music').then((result) => {
-  console.log(result); // returns the current volume as a float (0-1)
 
-  // NOTE: if you don't supply a type to getVolume on Android, you will receive the VolumeResult object:
+  // can be a number or object (depends on iOS or Android and if supplied for type)
+  console.log(result);
+
+  // NOTE: if you don't supply a type to getVolume on Android,
+  //you will receive the VolumeResult object:
+
   /*
   {
     volume: number, // these are the same
@@ -72,19 +81,24 @@ VolumeManager.getVolume('music').then((result) => {
     notification: number,
   }
   */
+
   // iOS will always return only the volume as float
 });
 
-// listen to volume changes
+// listen to volume changes (example)
 useEffect(() => {
   const volumeListener = VolumeManager.addVolumeListener((result) => {
-    console.log(result.volume); // returns the current volume as a float (0-1)
-    // on android, the result object will also have the keys music, system, ring, alarm, notification
+     // returns the current volume as a float (0-1)
+    console.log(result.volume);
+
+    // on android, the result object will also have the keys
+    // music, system, ring, alarm, notification
   });
 
   // clean up function
   return function () {
-    // remove listener, just call .remove on the volumeListener EventSubscription
+    // remove listener, just call .remove on the volumeListener
+    // EventSubscription. Never forget to clean up your listeners.
     volumeListener.remove();
   }
 }, []);
@@ -97,7 +111,8 @@ useFocusEffect(
         try {
           // once we detected a user on iOS triggered volume change,
           // we can change the audio mode to allow playback even when the
-          // silent switch is activated.
+          // silent switch is activated. This can help to achieve effects like in
+          // instragram reels, where videos are muted on silent switch
           // This example requires expo-av
           await Audio.setAudioModeAsync({
             playsInSilentModeIOS: true,
@@ -117,15 +132,19 @@ useFocusEffect(
 
 There is no native iOS API to detect if the mute switch is enabled/disabled on a device.
 
-The general principle to check if the device is muted is to play a short sound without audio and detect the length it took to play. Has a trigger rate of 1 second.
+The general principle to check if the device is muted is to play a short sound without audio and detect the length it took to play. **Has a trigger rate of 1 second**.
 
 **Note: The check is performed on the native main thread, not the JS thread.**
-You can increase or decrease how often the check is performed by changing the `VolumeManager.setNativeSilenceCheckInterval(1)` property. Minimum value is `0.5`, default is `2`. The default value is usually enough.
+
+You can increase or decrease how often the check is performed by changing the `VolumeManager.setNativeSilenceCheckInterval(1)` property.
+Minimum value is `0.5`, default is `2`. The default value is usually enough.
 
 ```tsx
 import { VolumeManager } from 'react-native-volume-manager';
 const [isSilent, setIsSilent] = useState<boolean>();
 
+// optional, default is 2 seconds. You can choose to set a higher value
+// when fast recognition is not critical (will save Battery)
 VolumeManager.setNativeSilenceCheckInterval(1); // min 0.5, default 2
 
 // ....
@@ -137,7 +156,7 @@ useEffect(() => {
   });
 
   return () => {
-    // remove listener, just call .remove on the emitter
+    // remove listener, just call .remove on the emitter return
     // never forget to clean up
     silentListener.remove();
   };
@@ -146,15 +165,24 @@ useEffect(() => {
 
 ## API
 
-| Method                                                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Volume**                                              |
-| getVolume(type?:string) => Promise                      | Get the system volume. <br><br>`type` must be one of `music`, `call`, `system`, `ring`, `alarm`, `notification`, default is `music`. (Android only, iOS will always report the system volume)                                                                                                                                                                                                                                                                                             |
-| setVolume(value:float, config?:object)                  | Set the system volume by specified value, from 0 to 1. 0 for mute, and 1 for the max volume.<br><br> `config` can be `{type: 'music', playSound:true, showUI:true}`<br><br> `type` : must be one of `music`, `call`, `system`, `ring`, `alarm`, `notification`, default is `music`. (Android only) <br>`playSound`: Whether to play a sound when changing the volume, default is `false` (Android only)<br>`showUI`: Show the native system volume UI, default is `false` (Android & iOS) |
-| addVolumeListener(callback)                             | Listen to volume changes (soft- and hardware. addListener will return the listener which is needed for cleanup. Result passed to callback contains `volume` as key.                                                                                                                                                                                                                                                                                                                       |
-| `listener.remove()`                                     | Remove the listener when you don't need it anymore. Store the return of `const listener = VolumeManager.addListener()` in a variable and call it with `.remove()`. See the example above.                                                                                                                                                                                                                                                                                                 |
-| addRingerListener(callback): RingerSilentStatus => void | **Android only:** Listen to ringer mode changes. Returns object with type. `RingerSilentStatus` No-op on iOS                                                                                                                                                                                                                                                                                                                                                                              |
-| removeRingerListener(listener) => void                  | **Android only:** Unlike `addVolumeListener`, you need to call a separate method and pass the return of `addRingerListener`. No-op on iOS                                                                                                                                                                                                                                                                                                                                                 |
+| Method                                                                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Volume**                                                              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `VolumeManager.getVolume(type?:string) => Promise` (async)              | Get the volume. <br><br>`type` must be one of `music`, `call`, `system`, `ring`, `alarm`, `notification`, default is `music`. (Android only, iOS will always report the system volume)                                                                                                                                                                                                                                                                                                              |
+| `VolumeManager.setVolume(value:float, config?:object)` (async)          | Set the system volume by specified value, from 0 to 1. 0 for mute, and 1 for the max volume.<br><br> `config?` can be like `{type: 'music', playSound:true, showUI:true}`<br><br> `type` : must be one of `music`, `call`, `system`, `ring`, `alarm`, `notification`, default is `music`. (Android only) <br>`playSound`: Whether to play a sound when changing the volume, default is `false` (Android only)<br>`showUI`: Show the native system volume UI, default is `false` (**Android & iOS**) |
+| `VolumeManager.addVolumeListener(callback)`                             | Listen to volume changes (soft- and hardware). `addVolumeListener` will return the listener which is needed for cleanup. Will return a number or object.<br><br>Remove the listener when you don't need it anymore. Store the return of<br>`const listener = VolumeManager.addVolumeListener()` in a variable and call it with `listener.remove()`                                                                                                                                                  |
+| **Android ringer listener**                                             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `VolumeManager.addRingerListener(callback): RingerSilentStatus => void` | **Android only:** Listen to ringer mode changes. Returns an object with type. `RingerSilentStatus`. No-op on iOS                                                                                                                                                                                                                                                                                                                                                                                    |
+| `VolumeManager.removeRingerListener(listener) => void`                  | **Android only:** Unlike `addVolumeListener`, you need to call a separate method and pass the return of `addRingerListener`. No-op on iOS                                                                                                                                                                                                                                                                                                                                                           |
+| `VolumeManager.isRingerListenerEnabled()`                               | Returns bool if listening to ringer mode changes is possible.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `VolumeManager.getRingerMode() => Promise` (async)                      | Get the current ringer mode. Returns `RingerModeType`                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `VolumeManager.setRingerMode(mode: RingerModeType) => Promise` (async)  | Set the ringer mode. Please have a look at the Hooks / Ringer mode section, because there are special cases with DND.                                                                                                                                                                                                                                                                                                                                                                               |
+| `requestDndAccess()                                                     | Request permission to change ringer mode while in DND or to DND                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `VolumeManager.checkDndAccess()`                                        | Checks if you have permission to change ringer mode while device is in DND or if you can put the device into DND mode.                                                                                                                                                                                                                                                                                                                                                                              |
+| **Hook**<br />`const { mode, error, setMode } = useRingerMode();`<br /> | Returns state and functions to get or set the current ringer mode. This is a one-time getter, if you need monitoring, use the `addRinterListener` instead.                                                                                                                                                                                                                                                                                                                                          |
+| **iOS silent listener**                                                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `VolumeManager.addSilentListener(callback): boolean => void`            | Listen to silent switch changes on iOS. Returns `true` if muted and `false` if not. Remove the listener when you don't need it anymore.<br /><br />Store the return of `const listener = VolumeManager.addSilentListener()` in a variable and call it with`listener.remove()`                                                                                                                                                                                                                       |
+| `VolumeManager.setNativeSilenceCheckInterval(number)`                   | How often the native thread should check of the silent switch state on iOS has changed. Defaults to 2, minimum value is 0.5. Increase the number if you don't need frequent checks (will help against battery drainage)                                                                                                                                                                                                                                                                             |
 
 ## Hooks / Ringer mode (Android only, no-op on iOS)
 
@@ -267,7 +295,7 @@ export default function App() {
 }
 ```
 
-## Not allowed to change Do Not Disturb state checkDndAccess & requestDndAccess
+## Not allowed to change `Do Not Disturb state` checkDndAccess & requestDndAccess
 
 From N onward, ringer mode adjustments that would toggle Do Not Disturb are not allowed unless the app has been granted Do Not Disturb Access. See [AudioManager#setRingerMode](<https://developer.android.com/reference/android/media/AudioManager#setRingerMode(int)>).
 
