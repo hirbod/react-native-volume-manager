@@ -72,3 +72,7 @@ export type RingerSilentStatus = {
 };
 
 export type RingerEventCallback = (event: RingerSilentStatus) => void;
+
+export interface EmitterSubscriptionNoop {
+  remove(): void;
+}
