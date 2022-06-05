@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import type {
   AndroidVolumeTypes,
+  EmitterSubscriptionNoop,
   eventCallback,
   RingerEventCallback,
   RingerModeType,
@@ -42,9 +43,14 @@ const SilentListenerNativeModule = NativeModules.VolumeManagerSilentListener
       }
     );
 
+const noopEmitterSubscription = {
+  remove: () => {
+    // noop
+  },
+} as EmitterSubscriptionNoop;
+
 const eventEmitter = new NativeEventEmitter(VolumeManagerNativeModule);
 const silentEventEmitter = new NativeEventEmitter(SilentListenerNativeModule);
-
 const isAndroid = Platform.OS === 'android';
 
 export async function getRingerMode(): Promise<RingerModeType | undefined> {
@@ -132,32 +138,44 @@ export function addVolumeListener(
 }
 
 // SilentListener related
-const addSilentListener = (callback: eventCallback): EmitterSubscription => {
-  return silentEventEmitter.addListener('RNVMSilentEvent', callback);
+const addSilentListener = (
+  callback: eventCallback
+): EmitterSubscription | EmitterSubscriptionNoop => {
+  if (Platform.OS === 'ios') {
+    return silentEventEmitter.addListener('RNVMSilentEvent', callback);
+  }
+
+  return noopEmitterSubscription;
 };
 
 const setNativeSilenceCheckInterval: setCheckIntervalType = (value: number) => {
-  SilentListenerNativeModule.setInterval(value);
+  if (Platform.OS === 'ios') {
+    SilentListenerNativeModule.setInterval(value);
+  }
 };
 
 // Ringer mode listener
 
-const isRingerListenerEnabled = (): Promise<boolean> => {
+export const isRingerListenerEnabled = (): Promise<boolean> => {
   if (Platform.OS === 'android') {
     return SilentListenerNativeModule.isEnabled();
   }
   return Promise.resolve(true);
 };
 
-const addRingerListener = (callback: RingerEventCallback) => {
+export const addRingerListener = (
+  callback: RingerEventCallback
+): EmitterSubscription | EmitterSubscriptionNoop => {
   if (Platform.OS === 'android') {
     SilentListenerNativeModule.registerObserver();
     return silentEventEmitter.addListener('RNVMSilentEvent', callback);
   }
-  return null;
+  return noopEmitterSubscription;
 };
 
-const removeRingerListener = (listener: EmitterSubscription | null): void => {
+export const removeRingerListener = (
+  listener: EmitterSubscription | EmitterSubscriptionNoop
+): void => {
   if (Platform.OS === 'android') {
     SilentListenerNativeModule.unregisterObserver();
     listener && listener.remove();
@@ -173,6 +191,10 @@ export const VolumeManager = {
   addRingerListener,
   removeRingerListener,
   setNativeSilenceCheckInterval,
+  getRingerMode,
+  setRingerMode,
+  checkDndAccess,
+  requestDndAccess,
 };
 
 export default VolumeManager;
