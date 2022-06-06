@@ -12,13 +12,14 @@ class SilentListener: RCTEventEmitter {
     
     var previousValue: Bool = false
     var hasListeners: Bool = false
+    var initialValueReported: Bool = false
     
     override init() {
       super.init()
       
       Mute.shared.checkInterval = 2.0
       Mute.shared.alwaysNotify = true
-      
+      Mute.shared.isPaused = true;
       Mute.shared.notify = onNotify
     }
     
@@ -27,21 +28,24 @@ class SilentListener: RCTEventEmitter {
     }
     
     func onNotify(_ newVal: Bool) {
-      if previousValue == newVal {
-        return
-      }
-      
-      previousValue = newVal
       if hasListeners {
+        if previousValue == newVal && self.initialValueReported {
+          return
+        }
+
+        self.initialValueReported = true;
+        previousValue = newVal
         sendEvent(withName: "RNVMSilentEvent", body: newVal)
       }
     }
     
     override func startObserving() {
       self.hasListeners = true
+      Mute.shared.isPaused = false;
     }
     
     override func stopObserving() {
       self.hasListeners = false;
+      Mute.shared.isPaused = true;
     }
 }
