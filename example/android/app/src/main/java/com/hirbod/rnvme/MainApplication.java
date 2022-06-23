@@ -20,8 +20,6 @@ import expo.modules.ReactNativeHostWrapper;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import com.reactnativevolumemanager.VolumeManagerPackage;
-import com.reactnativevolumemanager.VolumeManagerSilentListenerPackage;
-
 
 public class MainApplication extends Application implements ReactApplication {
   private final ReactNativeHost mReactNativeHost = new ReactNativeHostWrapper(
@@ -39,7 +37,6 @@ public class MainApplication extends Application implements ReactApplication {
       // Packages that cannot be autolinked yet can be added manually here, for example:
       // packages.add(new MyReactNativePackage());
       packages.add(new VolumeManagerPackage());
-      packages.add(new VolumeManagerSilentListenerPackage());
       return packages;
     }
 

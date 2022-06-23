@@ -18,6 +18,7 @@ public class VolumeManagerPackage implements ReactPackage {
     public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new VolumeManagerModule(reactContext));
+        modules.add(new VolumeManagerSilentListenerModule(reactContext));
         return modules;
     }
 
