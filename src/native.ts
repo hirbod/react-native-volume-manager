@@ -6,6 +6,8 @@ import {
 } from 'react-native';
 import type {
   AndroidVolumeTypes,
+  AVAudioSessionCategory,
+  AVAudioSessionMode,
   EmitterSubscriptionNoop,
   eventCallback,
   RingerEventCallback,
@@ -69,6 +71,44 @@ export async function setRingerMode(
   }
 
   return VolumeManagerNativeModule.setRingerMode(mode);
+}
+
+export async function enable(enabled: boolean = true): Promise<void> {
+  return VolumeManagerNativeModule.enable(enabled);
+}
+
+export async function setActive(value: boolean = true): Promise<void> {
+  if (!isAndroid) {
+    return VolumeManagerNativeModule.setActive(value);
+  }
+  return undefined;
+}
+
+export async function setCategory(
+  value: AVAudioSessionCategory,
+  mixWithOthers?: boolean
+): Promise<void> {
+  if (!isAndroid) {
+    return VolumeManagerNativeModule.setCategory(value, mixWithOthers);
+  }
+  return undefined;
+}
+
+export async function setMode(value: AVAudioSessionMode): Promise<void> {
+  if (!isAndroid) {
+    return VolumeManagerNativeModule.setMode(value);
+  }
+  return undefined;
+}
+
+export async function enableInSilenceMode(
+  enabled: boolean = true
+): Promise<void> {
+  if (isAndroid) {
+    return undefined;
+  }
+
+  return VolumeManagerNativeModule.enableInSilenceMode(enabled);
 }
 
 export async function checkDndAccess(): Promise<boolean | undefined> {
@@ -197,6 +237,11 @@ export const VolumeManager = {
   setRingerMode,
   checkDndAccess,
   requestDndAccess,
+  enable,
+  setActive,
+  setCategory,
+  setMode,
+  enableInSilenceMode,
 };
 
 export default VolumeManager;

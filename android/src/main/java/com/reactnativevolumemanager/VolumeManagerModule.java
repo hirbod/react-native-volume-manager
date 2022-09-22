@@ -40,6 +40,9 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     private final AudioManager am;
     private final VolumeBroadcastReceiver volumeBR;
 
+    String category;
+    Boolean mixWithOthers = true;
+
     public VolumeManagerModule(ReactApplicationContext reactContext) {
 
         super(reactContext);
@@ -47,6 +50,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
         reactContext.addLifecycleEventListener(this);
         am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         volumeBR = new VolumeBroadcastReceiver();
+        this.category = null;
     }
 
     private void registerVolumeReceiver() {
@@ -68,6 +72,16 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     @NonNull
     public String getName() {
         return NAME;
+    }
+
+    @ReactMethod
+    public void enable(final Boolean enabled) {
+        // no op
+    }
+
+    @ReactMethod
+    public void setCategory(final String category, final Boolean mixWithOthers) {
+        // no op
     }
 
     @ReactMethod

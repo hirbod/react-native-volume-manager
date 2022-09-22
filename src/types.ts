@@ -1,6 +1,26 @@
 export type eventCallback = (isMuted: boolean) => void;
 export type setCheckIntervalType = (newInterval: number) => void;
 
+export type AVAudioSessionCategory =
+  | 'Ambient'
+  | 'SoloAmbient'
+  | 'Playback'
+  | 'Record'
+  | 'PlayAndRecord'
+  | 'AudioProcessing'
+  | 'MultiRoute'
+  | 'Alarm';
+
+export type AVAudioSessionMode =
+  | 'Default'
+  | 'VoiceChat'
+  | 'VideoChat'
+  | 'GameChat'
+  | 'VideoRecording'
+  | 'Measurement'
+  | 'MoviePlayback'
+  | 'SpokenAudio';
+
 export type AndroidVolumeTypes =
   | 'music'
   | 'call'
