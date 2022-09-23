@@ -60,86 +60,101 @@ RCT_EXPORT_METHOD(getVolume:(NSString *)type resolve:(RCTPromiseResolveBlock)res
 
 RCT_EXTERN_METHOD(setMuteListenerInterval: (nonnull NSNumber *) newInterval)
 
-RCT_EXPORT_METHOD(enable : (BOOL)enabled) {
+RCT_EXPORT_METHOD(enable : (BOOL)enabled async : (BOOL)async) {
+  if(async) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
+      AVAudioSession *session = [AVAudioSession sharedInstance];
+      [session setCategory:AVAudioSessionCategoryAmbient error:nil];
+      [session setActive:enabled withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+    });
+  } else {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryAmbient error:nil];
-    [session setActive:enabled error:nil];
+    [session setActive:enabled withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+  }
 }
 
-RCT_EXPORT_METHOD(setActive : (BOOL)active) {
+RCT_EXPORT_METHOD(setActive : (BOOL)active async : (BOOL)async) {
+  if(async) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
+      AVAudioSession *session = [AVAudioSession sharedInstance];
+      [session setActive:active withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+    });
+  } else {
     AVAudioSession *session = [AVAudioSession sharedInstance];
-    [session setActive:active error:nil];
+    [session setActive:active withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+  }
+
 }
 
 RCT_EXPORT_METHOD(setMode : (NSString *)modeName) {
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    NSString *mode = nil;
+  AVAudioSession *session = [AVAudioSession sharedInstance];
+  NSString *mode = nil;
 
-    if ([modeName isEqual:@"Default"]) {
-        mode = AVAudioSessionModeDefault;
-    } else if ([modeName isEqual:@"VoiceChat"]) {
-        mode = AVAudioSessionModeVoiceChat;
-    } else if ([modeName isEqual:@"VideoChat"]) {
-        mode = AVAudioSessionModeVideoChat;
-    } else if ([modeName isEqual:@"GameChat"]) {
-        mode = AVAudioSessionModeGameChat;
-    } else if ([modeName isEqual:@"VideoRecording"]) {
-        mode = AVAudioSessionModeVideoRecording;
-    } else if ([modeName isEqual:@"Measurement"]) {
-        mode = AVAudioSessionModeMeasurement;
-    } else if ([modeName isEqual:@"MoviePlayback"]) {
-        mode = AVAudioSessionModeMoviePlayback;
-    } else if ([modeName isEqual:@"SpokenAudio"]) {
-        mode = AVAudioSessionModeSpokenAudio;
-    }
+  if ([modeName isEqual:@"Default"]) {
+      mode = AVAudioSessionModeDefault;
+  } else if ([modeName isEqual:@"VoiceChat"]) {
+      mode = AVAudioSessionModeVoiceChat;
+  } else if ([modeName isEqual:@"VideoChat"]) {
+      mode = AVAudioSessionModeVideoChat;
+  } else if ([modeName isEqual:@"GameChat"]) {
+      mode = AVAudioSessionModeGameChat;
+  } else if ([modeName isEqual:@"VideoRecording"]) {
+      mode = AVAudioSessionModeVideoRecording;
+  } else if ([modeName isEqual:@"Measurement"]) {
+      mode = AVAudioSessionModeMeasurement;
+  } else if ([modeName isEqual:@"MoviePlayback"]) {
+      mode = AVAudioSessionModeMoviePlayback;
+  } else if ([modeName isEqual:@"SpokenAudio"]) {
+      mode = AVAudioSessionModeSpokenAudio;
+  }
 
-    if (mode) {
-        [session setMode:mode error:nil];
-    }
+  if (mode) {
+      [session setMode:mode error:nil];
+  }
 }
 
 RCT_EXPORT_METHOD(setCategory
                   : (NSString *)categoryName mixWithOthers
                   : (BOOL)mixWithOthers) {
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    NSString *category = nil;
+  
+  AVAudioSession *session = [AVAudioSession sharedInstance];
+  NSString *category = nil;
 
-    if ([categoryName isEqual:@"Ambient"]) {
-        category = AVAudioSessionCategoryAmbient;
-    } else if ([categoryName isEqual:@"SoloAmbient"]) {
-        category = AVAudioSessionCategorySoloAmbient;
-    } else if ([categoryName isEqual:@"Playback"]) {
-        category = AVAudioSessionCategoryPlayback;
-    } else if ([categoryName isEqual:@"Record"]) {
-        category = AVAudioSessionCategoryRecord;
-    } else if ([categoryName isEqual:@"PlayAndRecord"]) {
-        category = AVAudioSessionCategoryPlayAndRecord;
-    }
-#if TARGET_OS_IOS
-    else if ([categoryName isEqual:@"AudioProcessing"]) {
-        category = AVAudioSessionCategoryAudioProcessing;
-    }
-#endif
-    else if ([categoryName isEqual:@"MultiRoute"]) {
-        category = AVAudioSessionCategoryMultiRoute;
-    }
+  if ([categoryName isEqual:@"Ambient"]) {
+      category = AVAudioSessionCategoryAmbient;
+  } else if ([categoryName isEqual:@"SoloAmbient"]) {
+      category = AVAudioSessionCategorySoloAmbient;
+  } else if ([categoryName isEqual:@"Playback"]) {
+      category = AVAudioSessionCategoryPlayback;
+  } else if ([categoryName isEqual:@"Record"]) {
+      category = AVAudioSessionCategoryRecord;
+  } else if ([categoryName isEqual:@"PlayAndRecord"]) {
+      category = AVAudioSessionCategoryPlayAndRecord;
+  }
+  else if ([categoryName isEqual:@"MultiRoute"]) {
+      category = AVAudioSessionCategoryMultiRoute;
+  }
 
-    if (category) {
-        if (mixWithOthers) {
-            [session setCategory:category
-                     withOptions:AVAudioSessionCategoryOptionMixWithOthers |
-                                 AVAudioSessionCategoryOptionAllowBluetooth
-                           error:nil];
-        } else {
-            [session setCategory:category error:nil];
-        }
-    }
+  if (category) {
+      if (mixWithOthers) {
+          [session setCategory:category
+                   withOptions:AVAudioSessionCategoryOptionMixWithOthers |
+                               AVAudioSessionCategoryOptionAllowBluetooth
+                         error:nil];
+      } else {
+          [session setCategory:category error:nil];
+      }
+  }
+  
 }
 
 RCT_EXPORT_METHOD(enableInSilenceMode : (BOOL)enabled) {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     [session setActive:enabled error:nil];
+  });
 }
 
 -(void)showVolumeUI:(BOOL)flag{

@@ -73,13 +73,19 @@ export async function setRingerMode(
   return VolumeManagerNativeModule.setRingerMode(mode);
 }
 
-export async function enable(enabled: boolean = true): Promise<void> {
-  return VolumeManagerNativeModule.enable(enabled);
+export async function enable(
+  enabled: boolean = true,
+  async: boolean = true
+): Promise<void> {
+  return VolumeManagerNativeModule.enable(enabled, async);
 }
 
-export async function setActive(value: boolean = true): Promise<void> {
+export async function setActive(
+  value: boolean = true,
+  async: boolean = true
+): Promise<void> {
   if (!isAndroid) {
-    return VolumeManagerNativeModule.setActive(value);
+    return VolumeManagerNativeModule.setActive(value, async);
   }
   return undefined;
 }
