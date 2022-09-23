@@ -147,11 +147,11 @@ VolumeManager.enable(false, true); // second parameter true = async
 
 // if you want to activate or deactivate the audio session and inform running background music to resume, call setActive()
 
-// deactivate audio session if you don't need it anymore,
+// Activate audio session
 // for example when you background the app
 VolumeManager.setActive(true, true); // second parameter true = async
 
-// disable iOS audiosession
+// Deactivate audio session, inform background music apps to resume automatically
 VolumeManager.setActive(false, true); // second parameter true = async, non-blocking
 
 // This method triggers `AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation` automatically.
@@ -177,7 +177,8 @@ useAppState({
 });
 ```
 
-If you want to change the Audio Category or Audio Mode on iOS, you can call the functions `setCategory` or `setMode`. Please refefer to Apples documentation to find out what they do.
+If you want to change the Audio Category or Audio Mode on iOS, or play music when the silent switch is active,
+you can call the functions `enableInSilenceMode`, `setCategory` or `setMode`. Please refefer to Apples documentation to find out what they do.
 
 ```tsx
 import { VolumeManager } from 'react-native-volume-manager';
@@ -191,7 +192,11 @@ VolumeManager.setMode(mode)
 // Ambient, SoloAmbient, Playback, Record, PlayAndRecord, MultiRoute, Alarm
 VolumeManager.setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean) // 2nd param defaults to false
 
+// enable playing audio when silent switch is active
+VolumeManager.enableInSilenceMode(true)
 
+// disable playing audio when silent switch is active
+VolumeManager.enableInSilenceMode(false)
 ```
 
 ## iOS mute switch listener
