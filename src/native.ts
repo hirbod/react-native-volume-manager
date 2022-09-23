@@ -92,7 +92,7 @@ export async function setActive(
 
 export async function setCategory(
   value: AVAudioSessionCategory,
-  mixWithOthers?: boolean
+  mixWithOthers: boolean = false
 ): Promise<void> {
   if (!isAndroid) {
     return VolumeManagerNativeModule.setCategory(value, mixWithOthers);
