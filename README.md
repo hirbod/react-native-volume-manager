@@ -131,6 +131,69 @@ useFocusEffect(
 );
 ```
 
+## iOS Audio Session Management
+
+AVAudioSession related functions.
+
+```tsx
+import { VolumeManager } from 'react-native-volume-manager';
+
+// first parameter is boolean to enable or disable, second if it should happen async (non-blocking) or sync (blocking). Second param is true by default
+
+// enable iOS Audiosession (usually happening automatically when playing audio, this one activates Ambient mode)
+VolumeManager.enable(true, true); // second parameter true = async
+// disable iOS audiosession
+VolumeManager.enable(false, true); // second parameter true = async
+
+// if you want to activate or deactivate the audio session and inform running background music to resume, call setActive()
+
+// deactivate audio session if you don't need it anymore,
+// for example when you background the app
+VolumeManager.setActive(true, true); // second parameter true = async
+
+// disable iOS audiosession
+VolumeManager.setActive(false, true); // second parameter true = async, non-blocking
+
+// This method triggers `AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation` automatically.
+
+// Example, explicitly not triggering when status is "inactive"
+// only when active or background. Storing result in a ref to prevent
+// spamming the UI/JS thread
+const onAppStateChange = useCallback(async (status: AppStateStatus) => {
+  if (status === 'active') {
+    if (audioSessionIsInactive.current) {
+      VolumeManager.setActive(true);
+      audioSessionIsInactive.current = false;
+    }
+  } else if (status === 'background') {
+    VolumeManager.setActive(false);
+    audioSessionIsInactive.current = true;
+  }
+}, []);
+
+// AppState listener hook
+useAppState({
+  onChange: onAppStateChange,
+});
+```
+
+If you want to change the Audio Category or Audio Mode on iOS, you can call the functions `setCategory` or `setMode`. Please refefer to Apples documentation to find out what they do.
+
+```tsx
+import { VolumeManager } from 'react-native-volume-manager';
+
+// Change mode, available options are typed
+// Default, VoiceChat, VideoChat, GameChat, VideoRecording, Measurement, MoviePlayback, SpokenAudio
+
+VolumeManager.setMode(mode)
+
+// Change category
+// Ambient, SoloAmbient, Playback, Record, PlayAndRecord, MultiRoute, Alarm
+VolumeManager.setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean) // 2nd param defaults to false
+
+
+```
+
 ## iOS mute switch listener
 
 There is no native iOS API to detect if the mute switch is enabled/disabled on a device.
@@ -379,6 +442,7 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 ## Special thanks
 
 - Uses code from https://github.com/c19354837/react-native-system-setting
+- Uses code from https://github.com/zmxv/react-native-sound
 - Uses code from https://github.com/vitorverasm/react-native-silent
 - Uses code from https://github.com/GeorgyMishin/react-native-silent-listener
 - Fully implements https://github.com/reyhankaplan/react-native-ringer-mode
