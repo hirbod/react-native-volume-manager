@@ -9,7 +9,7 @@ import type {
   AVAudioSessionCategory,
   AVAudioSessionMode,
   EmitterSubscriptionNoop,
-  eventCallback,
+  RingMuteSwitchEventCallback,
   RingerEventCallback,
   RingerModeType,
   setCheckIntervalType,
@@ -185,7 +185,7 @@ export function addVolumeListener(
 
 // SilentListener related
 export const addSilentListener = (
-  callback: eventCallback
+  callback: RingMuteSwitchEventCallback
 ): EmitterSubscription | EmitterSubscriptionNoop => {
   if (Platform.OS === 'ios') {
     return silentEventEmitter.addListener('RNVMSilentEvent', callback);
