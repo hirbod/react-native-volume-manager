@@ -1,6 +1,6 @@
 {
   "name": "react-native-volume-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React Native module which adds the ability to change the system volume on iOS and Android, listen to volume changes and supress the native volume UI to build your own volume slider or UX.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
