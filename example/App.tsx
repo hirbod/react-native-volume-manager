@@ -14,10 +14,14 @@ const modeText = {
   [RINGER_MODE.vibrate]: 'Vibrate',
 };
 
+function nullishBooleanToString(value: boolean | undefined) {
+  return value === undefined ? 'unset' : value ? 'YES' : 'NO';
+}
+
 export default function App() {
   const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
-  const [isMuted, setIsMuted] = useState<boolean>();
-  const [initialQuery, setInitialQuery] = useState<boolean>();
+  const [isMuted, setIsMuted] = useState<boolean | undefined>();
+  const [initialQuery, setInitialQuery] = useState<boolean | undefined>();
   const [ringerStatus, setRingerStatus] = useState<RingerSilentStatus>();
 
   useEffect(() => {
@@ -107,9 +111,9 @@ export default function App() {
         <Text>Silent switch active?:</Text>
         <Text>
           {Platform.OS === 'ios'
-            ? `${isMuted ? 'YES' : 'NO'} (initial query: ${
-                initialQuery ? 'YES' : 'NO'
-              })`
+            ? `${nullishBooleanToString(
+                isMuted
+              )} (initial query: ${nullishBooleanToString(initialQuery)})`
             : 'Unsupported on Android'}
         </Text>
       </View>
