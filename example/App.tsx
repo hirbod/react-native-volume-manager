@@ -17,6 +17,7 @@ const modeText = {
 export default function App() {
   const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>();
+  const [initialQuery, setInitialQuery] = useState<boolean>();
   const [ringerStatus, setRingerStatus] = useState<RingerSilentStatus>();
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export default function App() {
 
     const silentListener = VolumeManager.addSilentListener((status) => {
       console.log(status);
-      setIsMuted(status);
+      setIsMuted(status.isMuted);
+      setInitialQuery(status.initialQuery);
     });
 
     const ringerListener = VolumeManager.addRingerListener((result) => {
@@ -105,9 +107,9 @@ export default function App() {
         <Text>Silent switch active?:</Text>
         <Text>
           {Platform.OS === 'ios'
-            ? isMuted
-              ? 'YES'
-              : 'NO'
+            ? `${isMuted ? 'YES' : 'NO'} (initial query: ${
+                initialQuery ? 'YES' : 'NO'
+              })`
             : 'Unsupported on Android'}
         </Text>
       </View>
