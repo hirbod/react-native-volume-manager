@@ -47,20 +47,24 @@ export const useRingerMode = () => {
  * A hook to check if the iOS device is silent. (Silent switch status)
  * @platform iOS
  * @param {number} nativeIntervalCheck The native interval to check the status in seconds. 0.5, default 2.
- * @returns boolean on iOS, undefined on other platforms
+ * @returns object of two boolean properties on iOS `{ isMuted`, `initialQuery` }, `undefined` for the first call and on non-iOS platforms
+ *          - `isMuted` represents the ring/mute switch position
+ *          - `initialQuery` informs whether reported status is the very first one reported (could be treated as the initial state of the `ring/mute switch` upon application launch)
  * @example
  * ```ts
-  const isSilent = useSilentSwitch(nativeIntervalCheck?: number);
+  const { isMuted, initialQuery } = useSilentSwitch(nativeIntervalCheck?: number);
  * ```
  */
 export const useSilentSwitch = (nativeIntervalCheck?: number) => {
-  const [isSilent, setIsSilent] = useState<boolean | undefined>();
+  const [status, setStatus] = useState<
+    { isMuted: boolean; initialQuery: boolean } | undefined
+  >();
 
   if (nativeIntervalCheck) setNativeSilenceCheckInterval(nativeIntervalCheck);
 
   useEffect(() => {
-    const silentListener = addSilentListener((status) => {
-      setIsSilent(status);
+    const silentListener = addSilentListener((event) => {
+      setStatus(event);
     });
 
     return function unmountSilentSwitchListener() {
@@ -68,5 +72,5 @@ export const useSilentSwitch = (nativeIntervalCheck?: number) => {
     };
   }, []);
 
-  return isSilent;
+  return status;
 };

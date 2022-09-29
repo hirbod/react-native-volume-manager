@@ -1,4 +1,7 @@
-export type eventCallback = (isMuted: boolean) => void;
+export type eventCallback = (event: {
+  isMuted: boolean;
+  initialQuery: boolean;
+}) => void;
 export type setCheckIntervalType = (newInterval: number) => void;
 
 export type AVAudioSessionCategory =
