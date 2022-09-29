@@ -1,4 +1,11 @@
-export type eventCallback = (isMuted: boolean) => void;
+export type RingMuteSwitchStatus = {
+  isMuted: boolean;
+  initialQuery: boolean;
+};
+
+export type RingMuteSwitchEventCallback = (
+  status: RingMuteSwitchStatus
+) => void;
 export type setCheckIntervalType = (newInterval: number) => void;
 
 export type AVAudioSessionCategory =
