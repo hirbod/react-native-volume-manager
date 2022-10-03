@@ -2598,13 +2598,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-community/slider@npm:4.2.3":
-  version: 4.2.3
-  resolution: "@react-native-community/slider@npm:4.2.3"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: ab8d0132b1ed40928aa1b9844177ea46d7af888488a09a806cae1d7679258f63c1c540b5efd97fea4c800719440930cfab4d03e0e247f4a5d8473c9c6099774a
+"@react-native-community/slider@npm:4.3.1":
+  version: 4.3.1
+  resolution: "@react-native-community/slider@npm:4.3.1"
+  checksum: a746963d537379d5c51e74ecea4eea7cb6198291deda9562ca6c07afb9c8afbd564a4a6a70904cd9ac9b042fc8ecc1ab3b8a4e0eed8b13858f8bc0aaa6b266f6
   languageName: node
   linkType: hard
 
@@ -5383,7 +5380,7 @@ __metadata:
     "@babel/runtime": ^7.12.5
     "@react-native-community/eslint-config": ^3.0.2
     "@react-native-community/eslint-plugin": ^1.2.0
-    "@react-native-community/slider": 4.2.3
+    "@react-native-community/slider": 4.3.1
     "@types/react": ~18.0.0
     "@types/react-native": ~0.69.1
     babel-plugin-module-resolver: ^4.1.0
