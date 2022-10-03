@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, Button, Platform } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import {
   VolumeManager,
   useRingerMode,
@@ -19,14 +26,18 @@ function nullishBooleanToString(value: boolean | undefined) {
 }
 
 // Globally hide/show the volume UI on iOS
-VolumeManager.showNativeVolumeUI({ enabled: true });
 
 export default function App() {
   const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean | undefined>();
   const [initialQuery, setInitialQuery] = useState<boolean | undefined>();
   const [ringerStatus, setRingerStatus] = useState<RingerSilentStatus>();
+  const [hideUI, setHideUI] = useState<boolean>(false);
   const volumeChangedByListener = useRef(true);
+
+  useEffect(() => {
+    VolumeManager.showNativeVolumeUI({ enabled: !hideUI });
+  }, [hideUI]);
 
   useEffect(() => {
     VolumeManager.getVolume('music').then((result) => {
@@ -64,7 +75,7 @@ export default function App() {
   const { mode, error, setMode } = useRingerMode();
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View>
         <Text style={styles.headline}>iOS / Android</Text>
       </View>
@@ -77,8 +88,10 @@ export default function App() {
         <Text>{currentSystemVolume <= 0 ? 'YES' : 'NO'}</Text>
       </View>
 
-      <View>
-        <Text style={styles.headline2}>Volume update with native UI</Text>
+      <View style={{ marginTop: 20 }}>
+        <Text style={styles.headline3}>
+          Volume update {hideUI ? '(without toast)' : '(with toast)'}
+        </Text>
       </View>
       <Slider
         style={{ width: '100%', height: 40 }}
@@ -86,32 +99,22 @@ export default function App() {
         maximumValue={1}
         minimumTrackTintColor="#000"
         maximumTrackTintColor="#999"
-        onValueChange={async (value) => {
-          VolumeManager.setVolume(value, { showUI: true });
+        onValueChange={(value) => {
+          VolumeManager.setVolume(value, { showUI: !hideUI });
         }}
-        onSlidingComplete={(value) => setReportedSystemVolume(value)}
+        onSlidingComplete={async (value) => {
+          setReportedSystemVolume(value);
+        }}
         value={currentSystemVolume}
         step={0.001}
       />
 
-      <View>
-        <Text style={styles.headline2}>Volume update with suppressed UI</Text>
-      </View>
-      <Slider
-        style={{ width: '100%', height: 40 }}
-        minimumValue={0}
-        maximumValue={1}
-        minimumTrackTintColor="#000"
-        maximumTrackTintColor="#999"
-        onValueChange={async (value) => {
-          VolumeManager.setVolume(value, { showUI: false });
-        }}
-        onSlidingComplete={(value) => setReportedSystemVolume(value)}
-        value={currentSystemVolume}
-        step={0.001}
+      <Button
+        title={hideUI ? 'Show native volume Toast' : 'Hide native volume Toast'}
+        onPress={() => setHideUI((shouldHide) => !shouldHide)}
       />
 
-      <View>
+      <View style={{ marginTop: 30 }}>
         <Text style={styles.headline}>iOS only features</Text>
       </View>
       <View style={styles.col}>
@@ -175,7 +178,7 @@ export default function App() {
           <Text>{error?.message}</Text>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -183,7 +186,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    justifyContent: 'center',
     padding: 20,
   },
   col: {
@@ -201,5 +203,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginVertical: 20,
+  },
+  headline3: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  headline4: {
+    fontSize: 14,
+    color: 'lightgrey',
   },
 });
