@@ -1,68 +1,127 @@
-#import <VolumeManager.h>
 #import <AVFoundation/AVFoundation.h>
+#import <VolumeManager.h>
 
 @import MediaPlayer;
 @import UIKit;
 
 @implementation VolumeManager {
   bool hasListeners;
-  long skipSetVolumeCount;
   MPVolumeView *volumeView;
   UISlider *volumeSlider;
 }
 
--(void)dealloc {
-    [self removeVolumeListener];
+- (void)dealloc {
+  [self removeVolumeListener];
 }
 
--(instancetype)init {
-    self = [super init];
-    if(self){
-        [self addVolumeListener];
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    [self addVolumeListener];
+  }
+
+  [self initVolumeView];
+  return self;
+}
+
+- (void)initVolumeView {
+  volumeView = [[MPVolumeView alloc] init];
+  [self showVolumeUI:YES];
+  for (UIView *view in volumeView.subviews) {
+    if ([view.class.description isEqualToString:@"MPVolumeSlider"]) {
+      volumeSlider = (UISlider *)view;
+      break;
     }
-  
-    [self initVolumeView];
-    return self;
+  }
+
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(applicationWillEnterForeground:)
+                                               name:UIApplicationWillEnterForegroundNotification
+                                             object:nil];
 }
 
--(void)initVolumeView {
-    skipSetVolumeCount = 0;
-    volumeView = [[MPVolumeView alloc] initWithFrame:CGRectMake(-[UIScreen mainScreen].bounds.size.width, 0, 0, 0)];
-    [self showVolumeUI:YES];
-    for (UIView* view in volumeView.subviews) {
-        if ([view.class.description isEqualToString:@"MPVolumeSlider"]){
-            volumeSlider = (UISlider*)view;
-            break;
-        }
+- (NSArray<NSString *> *)supportedEvents {
+  return @[ @"RNVMEventVolume" ];
+}
+
++ (BOOL)requiresMainQueueSetup {
+  return YES;
+}
+
+RCT_EXPORT_MODULE(VolumeManager)
+
+- (void)startObserving {
+  hasListeners = YES;
+}
+
+- (void)stopObserving {
+  hasListeners = NO;
+}
+
+- (void)showVolumeUI:(BOOL)flag {
+  if (flag && [volumeView superview]) {
+    [volumeView removeFromSuperview];
+  } else if (!flag && ![volumeView superview]) {
+    [[[[UIApplication sharedApplication] keyWindow] rootViewController].view addSubview:volumeView];
+  }
+}
+
+- (void)addVolumeListener {
+  AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+  [audioSession setCategory:AVAudioSessionCategoryAmbient
+                withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionAllowBluetooth
+                      error:nil];
+  [audioSession setActive:YES error:nil];
+
+  [audioSession addObserver:self
+                 forKeyPath:@"outputVolume"
+                    options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
+                    context:nil];
+}
+
+- (void)removeVolumeListener {
+  AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+  [audioSession removeObserver:self forKeyPath:@"outputVolume"];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSString *, id> *)change
+                       context:(void *)context {
+  if (object == [AVAudioSession sharedInstance] && [keyPath isEqualToString:@"outputVolume"]) {
+    float newValue = [change[@"new"] floatValue];
+    if (hasListeners) {
+      [self sendEventWithName:@"RNVMEventVolume" body:@{@"volume" : [NSNumber numberWithFloat:newValue]}];
     }
+  }
 }
 
-+(BOOL)requiresMainQueueSetup{
-    return YES;
+RCT_EXPORT_METHOD(showNativeVolumeUI : (NSDictionary *)showNativeVolumeUI) {
+  dispatch_sync(dispatch_get_main_queue(), ^{
+    id enabled = [showNativeVolumeUI objectForKey:@"enabled"];
+    [self showVolumeUI:(enabled != nil && [enabled boolValue])];
+  });
 }
 
-RCT_EXPORT_MODULE()
-
-RCT_EXPORT_METHOD(setVolume:(float)val config:(NSDictionary *)config){
-    skipSetVolumeCount++;
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        id showUI = [config objectForKey:@"showUI"];
-        [self showVolumeUI:(showUI != nil && [showUI boolValue])];
-        volumeSlider.value = val;
-    });
+RCT_EXPORT_METHOD(setVolume : (float)val config : (NSDictionary *)config) {
+  dispatch_sync(dispatch_get_main_queue(), ^{
+    id showUI = [config objectForKey:@"showUI"];
+    [self showVolumeUI:(showUI != nil && [showUI boolValue])];
+    volumeSlider.value = val;
+  });
 }
 
-RCT_EXPORT_METHOD(getVolume:(NSString *)type resolve:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        resolve([NSNumber numberWithFloat:[volumeSlider value]]);
-    });
+RCT_EXPORT_METHOD(getVolume : (NSString *)type resolve : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
+  dispatch_sync(dispatch_get_main_queue(), ^{
+    resolve([NSNumber numberWithFloat:[volumeSlider value]]);
+  });
 }
 
-RCT_EXTERN_METHOD(setMuteListenerInterval: (nonnull NSNumber *) newInterval)
+RCT_EXTERN_METHOD(setMuteListenerInterval : (nonnull NSNumber *)newInterval)
 
 RCT_EXPORT_METHOD(enable : (BOOL)enabled async : (BOOL)async) {
-  if(async) {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
+  if (async) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
       AVAudioSession *session = [AVAudioSession sharedInstance];
       [session setCategory:AVAudioSessionCategoryAmbient error:nil];
       [session setActive:enabled withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
@@ -75,8 +134,8 @@ RCT_EXPORT_METHOD(enable : (BOOL)enabled async : (BOOL)async) {
 }
 
 RCT_EXPORT_METHOD(setActive : (BOOL)active async : (BOOL)async) {
-  if(async) {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
+  if (async) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
       AVAudioSession *session = [AVAudioSession sharedInstance];
       [session setActive:active withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
     });
@@ -84,7 +143,6 @@ RCT_EXPORT_METHOD(setActive : (BOOL)active async : (BOOL)async) {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setActive:active withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
   }
-
 }
 
 RCT_EXPORT_METHOD(setMode : (NSString *)modeName) {
@@ -92,118 +150,70 @@ RCT_EXPORT_METHOD(setMode : (NSString *)modeName) {
   NSString *mode = nil;
 
   if ([modeName isEqual:@"Default"]) {
-      mode = AVAudioSessionModeDefault;
+    mode = AVAudioSessionModeDefault;
   } else if ([modeName isEqual:@"VoiceChat"]) {
-      mode = AVAudioSessionModeVoiceChat;
+    mode = AVAudioSessionModeVoiceChat;
   } else if ([modeName isEqual:@"VideoChat"]) {
-      mode = AVAudioSessionModeVideoChat;
+    mode = AVAudioSessionModeVideoChat;
   } else if ([modeName isEqual:@"GameChat"]) {
-      mode = AVAudioSessionModeGameChat;
+    mode = AVAudioSessionModeGameChat;
   } else if ([modeName isEqual:@"VideoRecording"]) {
-      mode = AVAudioSessionModeVideoRecording;
+    mode = AVAudioSessionModeVideoRecording;
   } else if ([modeName isEqual:@"Measurement"]) {
-      mode = AVAudioSessionModeMeasurement;
+    mode = AVAudioSessionModeMeasurement;
   } else if ([modeName isEqual:@"MoviePlayback"]) {
-      mode = AVAudioSessionModeMoviePlayback;
+    mode = AVAudioSessionModeMoviePlayback;
   } else if ([modeName isEqual:@"SpokenAudio"]) {
-      mode = AVAudioSessionModeSpokenAudio;
+    mode = AVAudioSessionModeSpokenAudio;
   }
 
   if (mode) {
-      [session setMode:mode error:nil];
+    [session setMode:mode error:nil];
   }
 }
 
-RCT_EXPORT_METHOD(setCategory
-                  : (NSString *)categoryName mixWithOthers
-                  : (BOOL)mixWithOthers) {
-  
+RCT_EXPORT_METHOD(setCategory : (NSString *)categoryName mixWithOthers : (BOOL)mixWithOthers) {
   AVAudioSession *session = [AVAudioSession sharedInstance];
   NSString *category = nil;
 
   if ([categoryName isEqual:@"Ambient"]) {
-      category = AVAudioSessionCategoryAmbient;
+    category = AVAudioSessionCategoryAmbient;
   } else if ([categoryName isEqual:@"SoloAmbient"]) {
-      category = AVAudioSessionCategorySoloAmbient;
+    category = AVAudioSessionCategorySoloAmbient;
   } else if ([categoryName isEqual:@"Playback"]) {
-      category = AVAudioSessionCategoryPlayback;
+    category = AVAudioSessionCategoryPlayback;
   } else if ([categoryName isEqual:@"Record"]) {
-      category = AVAudioSessionCategoryRecord;
+    category = AVAudioSessionCategoryRecord;
   } else if ([categoryName isEqual:@"PlayAndRecord"]) {
-      category = AVAudioSessionCategoryPlayAndRecord;
-  }
-  else if ([categoryName isEqual:@"MultiRoute"]) {
-      category = AVAudioSessionCategoryMultiRoute;
+    category = AVAudioSessionCategoryPlayAndRecord;
+  } else if ([categoryName isEqual:@"MultiRoute"]) {
+    category = AVAudioSessionCategoryMultiRoute;
   }
 
   if (category) {
-      if (mixWithOthers) {
-          [session setCategory:category
-                   withOptions:AVAudioSessionCategoryOptionMixWithOthers |
-                               AVAudioSessionCategoryOptionAllowBluetooth
-                         error:nil];
-      } else {
-          [session setCategory:category error:nil];
-      }
+    if (mixWithOthers) {
+      [session setCategory:category
+               withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionAllowBluetooth
+                     error:nil];
+    } else {
+      [session setCategory:category error:nil];
+    }
   }
-  
 }
 
 RCT_EXPORT_METHOD(enableInSilenceMode : (BOOL)enabled) {
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     [session setActive:enabled error:nil];
   });
 }
 
--(void)showVolumeUI:(BOOL)flag{
-    if(flag && [volumeView superview]){
-        [volumeView removeFromSuperview];
-    }else if(!flag && ![volumeView superview]){
-        [[[[UIApplication sharedApplication] keyWindow] rootViewController].view addSubview:volumeView];
-    }
-}
-
-- (NSArray<NSString *> *)supportedEvents
-{
-    return @[@"RNVMEventVolume"];
-}
-
--(void)startObserving {
-    hasListeners = YES;
-}
-
--(void)stopObserving {
-    hasListeners = NO;
-}
-
-- (void)addVolumeListener {
-        AVAudioSession* audioSession = [AVAudioSession sharedInstance];
-        [audioSession setActive:YES error:nil];
-        [audioSession addObserver:self
-                       forKeyPath:@"outputVolume"
-                          options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
-                          context:nil];
-}
-
--(void)removeVolumeListener {
-    AVAudioSession* audioSession = [AVAudioSession sharedInstance];
-    [audioSession removeObserver:self forKeyPath:@"outputVolume"];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context {
-
-    if (object == [AVAudioSession sharedInstance] && [keyPath isEqualToString:@"outputVolume"]) {
-        float newValue = [change[@"new"] floatValue];
-        if (skipSetVolumeCount == 0 && hasListeners) {
-            [self sendEventWithName:@"RNVMEventVolume"
-                               body:@{@"volume": [NSNumber numberWithFloat:newValue]}];
-        }
-        if (skipSetVolumeCount > 0) {
-            skipSetVolumeCount--;
-        }
-    }
+- (void)applicationWillEnterForeground:(NSNotification *)notification {
+  if (hasListeners) {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setActive:YES error:nil];
+  }
 }
 
 @end
