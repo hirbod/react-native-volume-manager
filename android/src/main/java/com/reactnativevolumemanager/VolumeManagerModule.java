@@ -1,6 +1,9 @@
 package com.reactnativevolumemanager;
 
+import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
+
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,6 +12,9 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Build;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 
@@ -26,7 +32,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 @ReactModule(name = VolumeManagerModule.NAME)
 public class VolumeManagerModule extends ReactContextBaseJavaModule implements ActivityEventListener, LifecycleEventListener {
-    public static final String NAME = "VolumeManager";
+  public static final String NAME = "VolumeManager";
     private final String TAG = VolumeManagerModule.class.getSimpleName();
 
     private static final String VOL_VOICE_CALL = "call";
@@ -38,7 +44,11 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
     private final ReactApplicationContext mContext;
     private final AudioManager am;
+    private Dialog mDialog;
     private final VolumeBroadcastReceiver volumeBR;
+
+    private Boolean showNativeVolumeUI = true;
+    private Boolean hardwareButtonListenerRegistered = false;
 
     String category;
     Boolean mixWithOthers = true;
@@ -67,6 +77,51 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
             mContext.unregisterReceiver(volumeBR);
             volumeBR.setRegistered(false);
         }
+    }
+
+
+  private void setupKeyListener() {
+    runOnUiThread(new Runnable() {
+
+      @Override
+      public void run() {
+
+        if(hardwareButtonListenerRegistered) return;
+
+        View rootView = ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
+        rootView.setFocusableInTouchMode(true);
+        rootView.requestFocus();
+        rootView.setOnKeyListener((v, keyCode, event) -> {
+          hardwareButtonListenerRegistered = true;
+
+          if(showNativeVolumeUI) return false;
+
+          switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+              am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                AudioManager.ADJUST_RAISE,
+                AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+              return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+              am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                AudioManager.ADJUST_LOWER,
+                AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+              return true;
+
+            default:
+              return false;
+          }
+        });
+      }
+    });
+  }
+
+    @ReactMethod
+    public void showNativeVolumeUI(ReadableMap config) {
+      boolean enabled = config.getBoolean("enabled");
+      showNativeVolumeUI = enabled;
+      // we want to listen to the hardware volume key buttons
+      setupKeyListener();
     }
 
     @Override
@@ -104,10 +159,13 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     @ReactMethod
     public void requestDndAccess(Promise promise) {
       if (!hasDndAccess() && mContext.hasCurrentActivity()) {
-          Intent intent = new Intent(
+        Intent intent = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+          intent = new Intent(
                               android.provider.Settings
                               .ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-          intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
           Context context = mContext.getCurrentActivity().getApplicationContext();
           context.startActivity(intent);
@@ -129,13 +187,9 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     }
 
     @ReactMethod
-    public void showNativeVolumeUI(ReadableMap config) {
-        // no op
-    }
-
-    @ReactMethod
     public void setVolume(float val, ReadableMap config) {
-        unregisterVolumeReceiver();
+
+      unregisterVolumeReceiver();
         String type = config.getString("type");
         boolean playSound = config.getBoolean("playSound");
         boolean showUI = config.getBoolean("showUI");
