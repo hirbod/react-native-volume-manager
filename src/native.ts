@@ -177,6 +177,12 @@ export async function setVolume(
   return await VolumeManagerNativeModule.setVolume(value, config);
 }
 
+export async function showNativeVolumeUI(config: {
+  enabled: boolean;
+}): Promise<void> {
+  return VolumeManagerNativeModule.showNativeVolumeUI(config);
+}
+
 export function addVolumeListener(
   callback: (result: VolumeResult) => void
 ): EmitterSubscription {
@@ -234,6 +240,7 @@ export const VolumeManager = {
   addVolumeListener,
   getVolume,
   setVolume,
+  showNativeVolumeUI,
   isRingerListenerEnabled,
   addSilentListener,
   addRingerListener,

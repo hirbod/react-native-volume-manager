@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, Button, Platform } from 'react-native';
 import {
   VolumeManager,
@@ -18,11 +18,15 @@ function nullishBooleanToString(value: boolean | undefined) {
   return value === undefined ? 'unset' : value ? 'YES' : 'NO';
 }
 
+// Globally hide/show the volume UI on iOS
+VolumeManager.showNativeVolumeUI({ enabled: true });
+
 export default function App() {
   const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean | undefined>();
   const [initialQuery, setInitialQuery] = useState<boolean | undefined>();
   const [ringerStatus, setRingerStatus] = useState<RingerSilentStatus>();
+  const volumeChangedByListener = useRef(true);
 
   useEffect(() => {
     VolumeManager.getVolume('music').then((result) => {
@@ -33,6 +37,7 @@ export default function App() {
     });
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
+      volumeChangedByListener.current = true;
       setReportedSystemVolume(result.volume);
       console.log('Volume changed', result);
     });
@@ -82,10 +87,11 @@ export default function App() {
         minimumTrackTintColor="#000"
         maximumTrackTintColor="#999"
         onValueChange={async (value) => {
-          await VolumeManager.setVolume(value, { showUI: true });
-          setReportedSystemVolume(value);
+          VolumeManager.setVolume(value, { showUI: true });
         }}
+        onSlidingComplete={(value) => setReportedSystemVolume(value)}
         value={currentSystemVolume}
+        step={0.001}
       />
 
       <View>
@@ -98,10 +104,11 @@ export default function App() {
         minimumTrackTintColor="#000"
         maximumTrackTintColor="#999"
         onValueChange={async (value) => {
-          await VolumeManager.setVolume(value, { showUI: false });
-          setReportedSystemVolume(value);
+          VolumeManager.setVolume(value, { showUI: false });
         }}
+        onSlidingComplete={(value) => setReportedSystemVolume(value)}
         value={currentSystemVolume}
+        step={0.001}
       />
 
       <View>

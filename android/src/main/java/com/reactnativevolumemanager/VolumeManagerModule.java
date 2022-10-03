@@ -43,6 +43,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     String category;
     Boolean mixWithOthers = true;
 
+
     public VolumeManagerModule(ReactApplicationContext reactContext) {
 
         super(reactContext);
@@ -125,6 +126,11 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
       } catch (Exception err) {
         promise.reject(err);
       }
+    }
+
+    @ReactMethod
+    public void showNativeVolumeUI(ReadableMap config) {
+        // no op
     }
 
     @ReactMethod
