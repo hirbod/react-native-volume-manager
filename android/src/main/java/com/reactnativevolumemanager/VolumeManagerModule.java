@@ -3,7 +3,6 @@ package com.reactnativevolumemanager;
 import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -44,17 +43,15 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
     private final ReactApplicationContext mContext;
     private final AudioManager am;
-    private Dialog mDialog;
     private final VolumeBroadcastReceiver volumeBR;
 
     private Boolean showNativeVolumeUI = true;
     private Boolean hardwareButtonListenerRegistered = false;
 
     String category;
-    Boolean mixWithOthers = true;
 
 
-    public VolumeManagerModule(ReactApplicationContext reactContext) {
+  public VolumeManagerModule(ReactApplicationContext reactContext) {
 
         super(reactContext);
         mContext = reactContext;
@@ -81,45 +78,40 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
 
   private void setupKeyListener() {
-    runOnUiThread(new Runnable() {
+    runOnUiThread(() -> {
 
-      @Override
-      public void run() {
+      if(hardwareButtonListenerRegistered) return;
 
-        if(hardwareButtonListenerRegistered) return;
+      View rootView = ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
+      rootView.setFocusableInTouchMode(true);
+      rootView.requestFocus();
+      rootView.setOnKeyListener((v, keyCode, event) -> {
+        hardwareButtonListenerRegistered = true;
 
-        View rootView = ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
-        rootView.setFocusableInTouchMode(true);
-        rootView.requestFocus();
-        rootView.setOnKeyListener((v, keyCode, event) -> {
-          hardwareButtonListenerRegistered = true;
+        if(showNativeVolumeUI) return false;
 
-          if(showNativeVolumeUI) return false;
+        switch (event.getKeyCode()) {
+          case KeyEvent.KEYCODE_VOLUME_UP:
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+              AudioManager.ADJUST_RAISE,
+              AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+            return true;
+          case KeyEvent.KEYCODE_VOLUME_DOWN:
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+              AudioManager.ADJUST_LOWER,
+              AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+            return true;
 
-          switch (event.getKeyCode()) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-              am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_RAISE,
-                AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-              return true;
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-              am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_LOWER,
-                AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-              return true;
-
-            default:
-              return false;
-          }
-        });
-      }
+          default:
+            return false;
+        }
+      });
     });
   }
 
     @ReactMethod
     public void showNativeVolumeUI(ReadableMap config) {
-      boolean enabled = config.getBoolean("enabled");
-      showNativeVolumeUI = enabled;
+      showNativeVolumeUI = config.getBoolean("enabled");
       // we want to listen to the hardware volume key buttons
       setupKeyListener();
     }
@@ -165,6 +157,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
                               android.provider.Settings
                               .ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
         }
+        assert intent != null;
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
           Context context = mContext.getCurrentActivity().getApplicationContext();
@@ -264,7 +257,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
     @Override
     public void onNewIntent(Intent intent) {
-
+      //
     }
 
     @Override
