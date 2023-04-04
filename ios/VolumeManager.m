@@ -26,6 +26,7 @@
 
 - (void)initVolumeView {
   volumeView = [[MPVolumeView alloc] init];
+  volumeView.transform = CGAffineTransformMakeScale(0.1, 0.1);
   [self showVolumeUI:YES];
   for (UIView *view in volumeView.subviews) {
     if ([view.class.description isEqualToString:@"MPVolumeSlider"]) {
