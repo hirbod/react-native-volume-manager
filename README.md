@@ -78,10 +78,7 @@ useFocusEffect(
     const volumeListener = VolumeManager.addVolumeListener(async (result) => {
       if (Platform.OS === 'ios') {
         try {
-          // Requires expo-av
-          await Audio.setAudioModeAsync({
-            playsInSilentModeIOS: true,
-          });
+          VolumeManager.enableInSilenceMode(true); // Enable audio in silent mode
         } catch {}
       }
     });
