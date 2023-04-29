@@ -75,6 +75,14 @@
                                              object:nil];
 }
 
+- (UIViewController *)topMostViewController {
+  UIViewController *topController = [[UIApplication sharedApplication] keyWindow].rootViewController;
+  while (topController.presentedViewController) {
+    topController = topController.presentedViewController;
+  }
+  return topController;
+}
+
 - (NSArray<NSString *> *)supportedEvents {
   return @[ @"RNVMEventVolume" ];
 }
@@ -102,7 +110,8 @@ RCT_EXPORT_MODULE(VolumeManager)
         [strongSelf->customVolumeView removeFromSuperview];
       } else if (!flag && ![strongSelf->customVolumeView superview]) {
         strongSelf->customVolumeView.frame = CGRectMake(0, 0, 0, 0); // Set the frame to CGRectZero
-        [[[[UIApplication sharedApplication] keyWindow] rootViewController].view addSubview:strongSelf->customVolumeView];
+        UIViewController *topViewController = [strongSelf topMostViewController];
+        [topViewController.view addSubview:strongSelf->customVolumeView];
       }
     }
   });
