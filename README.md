@@ -2,14 +2,14 @@
 
 # react-native-volume-manager
 
-This native package adds the ability to change the system volume on iOS and Android, listen to volume changes and suppress the native volume UI to build your own volume slider and UX. It also provides a simple API to get the current volume level. On iOS, you can check if the silent switch is enabled and listen to changes. On Android, you can set and listen for ringer mode changes.
+This native package enhances system volume control on both iOS and Android, allowing you to adjust the volume, monitor volume changes, and suppress the default volume UI to create your own custom volume slider and user experience. The package offers a straightforward API for obtaining the current volume level. On iOS, you can determine if the silent switch is enabled and track any changes, while on Android, you can modify and monitor ringer mode changes.
 
 | ![React Native Volume Manager](ios-preview.gif) | ![React Native Volume Manager](android-preview.gif) |
 | ----------------------------------------------- | --------------------------------------------------- |
 
 ## Notice
 
-This library does **not work** in a **Simulator** or **Emulator**. It is only working on a real device.
+This library is **incompatible** with simulators and emulators and functions exclusively on **real devices**. Android Emulator 33 and above is supported.
 
 ## Installation
 
@@ -27,7 +27,7 @@ Linking the package manually is not required anymore with [Autolinking](https://
 
 ## Expo
 
-This library adds native code. It does not work with _Expo Go_ but you can easily install it using a [custom dev client](https://docs.expo.dev/development/getting-started/). Thats how it should be done in 2022 :).
+This library incorporates native code and is incompatible with _Expo Go_. However, you can effortlessly install it using a [custom dev client](https://docs.expo.dev/development/getting-started/) as recommended in 2022.
 
 **No config plugin required.**
 
