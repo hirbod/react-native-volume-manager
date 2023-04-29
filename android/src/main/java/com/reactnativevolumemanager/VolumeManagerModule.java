@@ -29,6 +29,11 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
+import android.app.Dialog;
+import android.widget.FrameLayout;
+import android.view.WindowManager;
+
+
 @ReactModule(name = VolumeManagerModule.NAME)
 public class VolumeManagerModule extends ReactContextBaseJavaModule implements ActivityEventListener, LifecycleEventListener {
   public static final String NAME = "VolumeManager";
@@ -61,6 +66,24 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     this.category = null;
   }
 
+  private Dialog createTransparentDialog() {
+      Activity currentActivity = mContext.getCurrentActivity();
+      if (currentActivity == null) return null;
+
+      Dialog transparentDialog = new Dialog(currentActivity, android.R.style.Theme_Translucent_NoTitleBar);
+      transparentDialog.setContentView(new FrameLayout(currentActivity));
+      transparentDialog.setCancelable(false);
+
+      // Set FLAG_NOT_TOUCHABLE to allow touch events to pass through the dialog
+      WindowManager.LayoutParams layoutParams = transparentDialog.getWindow().getAttributes();
+      layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+      transparentDialog.getWindow().setAttributes(layoutParams);
+
+      return transparentDialog;
+  }
+
+
+
   private void registerVolumeReceiver() {
     if (!volumeBR.isRegistered()) {
       IntentFilter filter = new IntentFilter(VOLUME_CHANGED_ACTION);
@@ -81,36 +104,42 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
   }
 
   private void setupKeyListener() {
-    runOnUiThread(() -> {
-      if (hardwareButtonListenerRegistered) return;
-      Activity currentActivity = mContext.getCurrentActivity();
-      if (currentActivity == null) return;
+      runOnUiThread(() -> {
+          if (hardwareButtonListenerRegistered) return;
+          Activity currentActivity = mContext.getCurrentActivity();
+          if (currentActivity == null) return;
 
-      View rootView = ((ViewGroup) currentActivity.getWindow().getDecorView());
-      rootView.setFocusableInTouchMode(true);
-      rootView.requestFocus();
-      rootView.setOnKeyListener((v, keyCode, event) -> {
-        hardwareButtonListenerRegistered = true;
+          Dialog transparentDialog = createTransparentDialog();
+          if (transparentDialog == null) return;
 
-        if (showNativeVolumeUI) return false;
+          View rootView = transparentDialog.getWindow().getDecorView();
+          rootView.setFocusableInTouchMode(true);
+          rootView.requestFocus();
+          rootView.setOnKeyListener((v, keyCode, event) -> {
+              hardwareButtonListenerRegistered = true;
 
-        switch (event.getKeyCode()) {
-        case KeyEvent.KEYCODE_VOLUME_UP:
-          am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-            AudioManager.ADJUST_RAISE,
-            AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-          return true;
-        case KeyEvent.KEYCODE_VOLUME_DOWN:
-          am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-            AudioManager.ADJUST_LOWER,
-            AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-          return true;
-        default:
-          return false;
-        }
+              if (showNativeVolumeUI) return false;
+
+              switch (event.getKeyCode()) {
+                  case KeyEvent.KEYCODE_VOLUME_UP:
+                      am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                              AudioManager.ADJUST_RAISE,
+                              AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                      return true;
+                  case KeyEvent.KEYCODE_VOLUME_DOWN:
+                      am.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                              AudioManager.ADJUST_LOWER,
+                              AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                      return true;
+                  default:
+                      return false;
+              }
+          });
+
+          transparentDialog.show();
       });
-    });
   }
+
 
   @ReactMethod
   public void showNativeVolumeUI(ReadableMap config) {
