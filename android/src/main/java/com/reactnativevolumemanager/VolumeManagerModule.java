@@ -71,8 +71,12 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
     private void unregisterVolumeReceiver() {
         if (volumeBR.isRegistered()) {
-            mContext.unregisterReceiver(volumeBR);
-            volumeBR.setRegistered(false);
+            try {
+                mContext.unregisterReceiver(volumeBR);
+                volumeBR.setRegistered(false);
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "Error unregistering volume receiver", e);
+            }
         }
     }
 
