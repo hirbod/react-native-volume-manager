@@ -288,7 +288,7 @@ PODS:
     - glog
   - react-native-slider (4.4.2):
     - React-Core
-  - react-native-volume-manager (1.2.1-local.0):
+  - react-native-volume-manager (1.2.1-local.1):
     - Mute
     - React-Core
   - React-perflogger (0.71.7)
@@ -554,7 +554,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 9885f6f94d231b95a739ef7bb50536fb87ce7539
   React-logger: 3f8ebad1be1bf3299d1ab6d7f971802d7395c7ef
   react-native-slider: 33b8d190b59d4f67a541061bb91775d53d617d9d
-  react-native-volume-manager: bc40176105a1a8d690bdc821155af4b9900376eb
+  react-native-volume-manager: c43b70f2360abc5363e09ac238f5710bafa55d33
   React-perflogger: 2d505bbe298e3b7bacdd9e542b15535be07220f6
   React-RCTActionSheet: 0e96e4560bd733c9b37efbf68f5b1a47615892fb
   React-RCTAnimation: fd138e26f120371c87e406745a27535e2c8a04ef

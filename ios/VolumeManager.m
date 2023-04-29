@@ -61,6 +61,12 @@
 - (void)initVolumeView {
   customVolumeView = [[CustomVolumeView alloc] init];
   customVolumeView.transform = CGAffineTransformMakeScale(0.0, 0.0);
+  for (UIView *subview in customVolumeView.subviews) {
+      if ([subview isKindOfClass:[UIButton class]]) {
+          subview.hidden = YES;
+          break;
+      }
+  }
   [self showVolumeUI:YES];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
