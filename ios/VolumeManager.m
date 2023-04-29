@@ -4,10 +4,43 @@
 @import MediaPlayer;
 @import UIKit;
 
+@interface CustomVolumeView : UIView
+@property (nonatomic, strong) UISlider *volumeSlider;
+@end
+
+@implementation CustomVolumeView
+
+- (instancetype)initWithFrame:(CGRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    [self setupVolumeSlider];
+  }
+  return self;
+}
+
+- (void)setupVolumeSlider {
+  MPVolumeView *volumeView = [[MPVolumeView alloc] initWithFrame:self.bounds];
+  volumeView.showsRouteButton = NO;
+
+  for (UIView *view in [volumeView subviews]) {
+    if ([view isKindOfClass:[UISlider class]]) {
+      self.volumeSlider = (UISlider *)view;
+      break;
+    }
+  }
+
+  if (self.volumeSlider) {
+    [self addSubview:self.volumeSlider];
+    self.volumeSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  }
+}
+
+@end
+
 @implementation VolumeManager {
   bool hasListeners;
-  MPVolumeView *volumeView;
-  UISlider *volumeSlider;
+  CustomVolumeView *customVolumeView;
+  AVAudioSession *audioSession;
 }
 
 - (void)dealloc {
@@ -17,6 +50,7 @@
 - (instancetype)init {
   self = [super init];
   if (self) {
+    audioSession = [AVAudioSession sharedInstance];
     [self addVolumeListener];
   }
 
@@ -25,14 +59,9 @@
 }
 
 - (void)initVolumeView {
-  volumeView = [[MPVolumeView alloc] init];
+  customVolumeView = [[CustomVolumeView alloc] init];
+  customVolumeView.transform = CGAffineTransformMakeScale(0.0, 0.0);
   [self showVolumeUI:YES];
-  for (UIView *view in volumeView.subviews) {
-    if ([view.class.description isEqualToString:@"MPVolumeSlider"]) {
-      volumeSlider = (UISlider *)view;
-      break;
-    }
-  }
 
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(applicationWillEnterForeground:)
@@ -59,15 +88,21 @@ RCT_EXPORT_MODULE(VolumeManager)
 }
 
 - (void)showVolumeUI:(BOOL)flag {
-  if (flag && [volumeView superview]) {
-    [volumeView removeFromSuperview];
-  } else if (!flag && ![volumeView superview]) {
-    [[[[UIApplication sharedApplication] keyWindow] rootViewController].view addSubview:volumeView];
-  }
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (strongSelf) {
+      if (flag && [strongSelf->customVolumeView superview]) {
+        [strongSelf->customVolumeView removeFromSuperview];
+      } else if (!flag && ![strongSelf->customVolumeView superview]) {
+        strongSelf->customVolumeView.frame = CGRectMake(0, 0, 0, 0); // Set the frame to CGRectZero
+        [[[[UIApplication sharedApplication] keyWindow] rootViewController].view addSubview:strongSelf->customVolumeView];
+      }
+    }
+  });
 }
 
 - (void)addVolumeListener {
-  AVAudioSession *audioSession = [AVAudioSession sharedInstance];
   [audioSession setCategory:AVAudioSessionCategoryAmbient
                 withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionAllowBluetooth
                       error:nil];
@@ -80,7 +115,6 @@ RCT_EXPORT_MODULE(VolumeManager)
 }
 
 - (void)removeVolumeListener {
-  AVAudioSession *audioSession = [AVAudioSession sharedInstance];
   [audioSession removeObserver:self forKeyPath:@"outputVolume"];
 }
 
@@ -97,23 +131,35 @@ RCT_EXPORT_MODULE(VolumeManager)
 }
 
 RCT_EXPORT_METHOD(showNativeVolumeUI : (NSDictionary *)showNativeVolumeUI) {
-  dispatch_sync(dispatch_get_main_queue(), ^{
-    id enabled = [showNativeVolumeUI objectForKey:@"enabled"];
-    [self showVolumeUI:(enabled != nil && [enabled boolValue])];
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (strongSelf) {
+      id enabled = [showNativeVolumeUI objectForKey:@"enabled"];
+      [strongSelf showVolumeUI:(enabled != nil && [enabled boolValue])];
+    }
   });
 }
 
 RCT_EXPORT_METHOD(setVolume : (float)val config : (NSDictionary *)config) {
-  dispatch_sync(dispatch_get_main_queue(), ^{
-    id showUI = [config objectForKey:@"showUI"];
-    [self showVolumeUI:(showUI != nil && [showUI boolValue])];
-    volumeSlider.value = val;
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (strongSelf) {
+      id showUI = [config objectForKey:@"showUI"];
+      [strongSelf showVolumeUI:(showUI != nil && [showUI boolValue])];
+      strongSelf->customVolumeView.volumeSlider.value = val;
+    }
   });
 }
 
 RCT_EXPORT_METHOD(getVolume : (NSString *)type resolve : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
-  dispatch_sync(dispatch_get_main_queue(), ^{
-    resolve([NSNumber numberWithFloat:[volumeSlider value]]);
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (strongSelf) {
+      resolve([NSNumber numberWithFloat:[strongSelf->customVolumeView.volumeSlider value]]);
+    }
   });
 }
 
