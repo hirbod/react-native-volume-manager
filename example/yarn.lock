@@ -5499,7 +5499,7 @@ __metadata:
     react: 18.2.0
     react-dom: 18.2.0
     react-native: 0.71.7
-    react-native-volume-manager: ../react-native-volume-manager-1.2.1-local.0.tgz
+    react-native-volume-manager: ../react-native-volume-manager-1.2.1-local.1.tgz
     react-native-web: ~0.18.12
     react-test-renderer: 18.2.0
     typescript: ^5.0.4
@@ -10495,13 +10495,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-volume-manager@file:../react-native-volume-manager-1.2.1-local.0.tgz::locator=example%40workspace%3A.":
-  version: 1.2.1-local.0
-  resolution: "react-native-volume-manager@file:../react-native-volume-manager-1.2.1-local.0.tgz::locator=example%40workspace%3A."
+"react-native-volume-manager@file:../react-native-volume-manager-1.2.1-local.1.tgz::locator=example%40workspace%3A.":
+  version: 1.2.1-local.1
+  resolution: "react-native-volume-manager@file:../react-native-volume-manager-1.2.1-local.1.tgz::locator=example%40workspace%3A."
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 09aa2a0c7f43a05f6c52b94b70e44637fd07822525606c8fd2dba15af529f127156e83210ad7ce420ee4fe9841aeaf080669c7961d0210b2e2de8d26e763329c
+  checksum: b72906b2994812c3eccc3ca5ede3d2b12586f276144b5d5e3c19ee8c928dd28a2fe7edfa43b861d61ced9dadaf92ffb55680799202345c0d0cffb9802e22575a
   languageName: node
   linkType: hard
 
