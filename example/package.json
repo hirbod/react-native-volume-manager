@@ -16,7 +16,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.71.7",
-    "react-native-volume-manager": "../react-native-volume-manager-1.5.0-local.0.tgz",
+    "react-native-volume-manager": "../react-native-volume-manager-1.5.1-local.0.tgz",
     "react-native-web": "~0.18.12"
   },
   "devDependencies": {
