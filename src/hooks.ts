@@ -8,7 +8,14 @@ import {
 import type { RingerModeType } from './types';
 
 /**
- * A hook to get the current ringer mode. You can also change the mode.
+ * `useRingerMode` is a custom hook to get the current ringer mode of the device.
+ * It also provides a function to change the ringer mode. This hook is intended to be used in react components where ringer mode needs to be managed.
+ *
+ * @returns {Object} - Contains the current mode, any error occurred, and a function to set a new mode.
+ * @property {RingerModeType | undefined} mode - The current mode of the device's ringer.
+ * @property {any} error - Any error that occurred while getting or setting the ringer mode.
+ * @property {Function} setMode - Function to set a new ringer mode.
+ *
  * @example
  * ```ts
   const { mode, setMode, error } = useRingerMode();
@@ -44,12 +51,16 @@ export const useRingerMode = () => {
 };
 
 /**
- * A hook to check if the iOS device is silent. (Silent switch status)
+ * `useSilentSwitch` is a custom hook to check if the iOS device is in silent mode.
+ *
+ * @param {number} nativeIntervalCheck - The native interval to check the status in seconds. Default is 2 seconds.
+ *
+ * @returns {Object | undefined} - Contains boolean properties `isMuted` and `initialQuery` on iOS. Returns `undefined` for the first call and on non-iOS platforms.
+ * @property {boolean} isMuted - Represents the ring/mute switch position.
+ * @property {boolean} initialQuery - Informs whether reported status is the very first one reported.
+ *
  * @platform iOS
- * @param {number} nativeIntervalCheck The native interval to check the status in seconds. 0.5, default 2.
- * @returns object of two boolean properties on iOS `{ isMuted`, `initialQuery` }, `undefined` for the first call and on non-iOS platforms
- *          - `isMuted` represents the ring/mute switch position
- *          - `initialQuery` informs whether reported status is the very first one reported (could be treated as the initial state of the `ring/mute switch` upon application launch)
+ *
  * @example
  * ```ts
   const { isMuted, initialQuery } = useSilentSwitch(nativeIntervalCheck?: number);

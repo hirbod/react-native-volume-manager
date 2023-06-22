@@ -1,3 +1,4 @@
+// Importing modules
 import {
   NativeModules,
   NativeEventEmitter,
@@ -5,7 +6,6 @@ import {
   EmitterSubscription,
 } from 'react-native';
 import type {
-  AndroidVolumeTypes,
   AVAudioSessionCategory,
   AVAudioSessionMode,
   EmitterSubscriptionNoop,
@@ -17,12 +17,18 @@ import type {
   VolumeResult,
 } from './types';
 
+/**
+ * Error message when 'react-native-volume-manager' package is not linked properly
+ */
 const LINKING_ERROR =
   `The package 'react-native-volume-manager' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
+/**
+ * Creates a proxy to throw an error when the module is not properly linked
+ */
 const VolumeManagerNativeModule = NativeModules.VolumeManager
   ? NativeModules.VolumeManager
   : new Proxy(
@@ -34,6 +40,9 @@ const VolumeManagerNativeModule = NativeModules.VolumeManager
       }
     );
 
+/**
+ * Creates a proxy for the silent listener to throw an error when the module is not properly linked
+ */
 const SilentListenerNativeModule = NativeModules.VolumeManagerSilentListener
   ? NativeModules.VolumeManagerSilentListener
   : new Proxy(
@@ -45,16 +54,30 @@ const SilentListenerNativeModule = NativeModules.VolumeManagerSilentListener
       }
     );
 
+/**
+ * No operation emitter subscription
+ */
 const noopEmitterSubscription = {
   remove: () => {
     // noop
   },
 } as EmitterSubscriptionNoop;
 
+/**
+ * Native event emitter for the Volume Manager
+ */
 const eventEmitter = new NativeEventEmitter(VolumeManagerNativeModule);
 const silentEventEmitter = new NativeEventEmitter(SilentListenerNativeModule);
+
+/**
+ * Checks if the current platform is Android
+ */
 const isAndroid = Platform.OS === 'android';
 
+/**
+ * Returns the current ringer mode. Android only.
+ * @returns {Promise<RingerModeType | undefined>} - The current ringer mode or undefined if not Android.
+ */
 export async function getRingerMode(): Promise<RingerModeType | undefined> {
   if (!isAndroid) {
     return;
@@ -63,6 +86,11 @@ export async function getRingerMode(): Promise<RingerModeType | undefined> {
   return VolumeManagerNativeModule.getRingerMode();
 }
 
+/**
+ * Sets the current device's ringer mode. Android only.
+ * @param {RingerModeType} mode - The ringer mode to set
+ * @returns {Promise<RingerModeType | undefined>} - The new ringer mode or undefined if not Android.
+ */
 export async function setRingerMode(
   mode: RingerModeType
 ): Promise<RingerModeType | undefined> {
@@ -73,6 +101,12 @@ export async function setRingerMode(
   return VolumeManagerNativeModule.setRingerMode(mode);
 }
 
+/**
+ * Enables or disables the VolumeManager
+ * @param {boolean} [enabled=true] - Enable or disable the VolumeManager
+ * @param {boolean} [async=true] - Perform operation asynchronously
+ * @returns {Promise<void>} - Resolves when the operation has finished
+ */
 export async function enable(
   enabled: boolean = true,
   async: boolean = true
@@ -80,6 +114,14 @@ export async function enable(
   return VolumeManagerNativeModule.enable(enabled, async);
 }
 
+/**
+ * Sets the active status of the VolumeManager. Android only.
+ * @param {boolean} [value=true] - Active status
+ * @param {boolean} [async=true] - Perform operation asynchronously
+ * @
+
+returns {Promise<void>} - Resolves when the operation has finished
+ */
 export async function setActive(
   value: boolean = true,
   async: boolean = true
@@ -90,6 +132,12 @@ export async function setActive(
   return undefined;
 }
 
+/**
+ * Sets the audio session category. iOS only.
+ * @param {AVAudioSessionCategory} value - The category to set
+ * @param {boolean} [mixWithOthers=false] - Allow audio to mix with others
+ * @returns {Promise<void>} - Resolves when the operation has finished
+ */
 export async function setCategory(
   value: AVAudioSessionCategory,
   mixWithOthers: boolean = false
@@ -100,6 +148,11 @@ export async function setCategory(
   return undefined;
 }
 
+/**
+ * Sets the audio session mode. iOS only.
+ * @param {AVAudioSessionMode} value - The mode to set
+ * @returns {Promise<void>} - Resolves when the operation has finished
+ */
 export async function setMode(value: AVAudioSessionMode): Promise<void> {
   if (!isAndroid) {
     return VolumeManagerNativeModule.setMode(value);
@@ -107,6 +160,11 @@ export async function setMode(value: AVAudioSessionMode): Promise<void> {
   return undefined;
 }
 
+/**
+ * Enables or disables the VolumeManager in silent mode. iOS only.
+ * @param {boolean} [enabled=true] - Enable or disable the VolumeManager in silent mode
+ * @returns {Promise<void>} - Resolves when the operation has finished
+ */
 export async function enableInSilenceMode(
   enabled: boolean = true
 ): Promise<void> {
@@ -117,6 +175,10 @@ export async function enableInSilenceMode(
   return VolumeManagerNativeModule.enableInSilenceMode(enabled);
 }
 
+/**
+ * Checks if Do Not Disturb access is granted. Android only.
+ * @returns {Promise<boolean | undefined>} - Do Not Disturb access status or undefined if not Android.
+ */
 export async function checkDndAccess(): Promise<boolean | undefined> {
   if (!isAndroid) {
     return;
@@ -125,6 +187,10 @@ export async function checkDndAccess(): Promise<boolean | undefined> {
   return VolumeManagerNativeModule.checkDndAccess();
 }
 
+/**
+ * Requests Do Not Disturb access. Android only.
+ * @returns {Promise<boolean | undefined>} - Do Not Disturb access request result or undefined if not Android.
+ */
 export async function requestDndAccess(): Promise<boolean | undefined> {
   if (!isAndroid) {
     return;
@@ -135,32 +201,17 @@ export async function requestDndAccess(): Promise<boolean | undefined> {
 
 /**
  * Get the current device volume.
- * @param {AndroidVolumeTypes} type - The type of volume you want to retrieve. Defaults to 'music' (Android only, no-op on iOS).
  * @returns {Promise<VolumeResult>} - Returns a promise that resolves to an object with the volume value.
- *
- * @example
- * ```ts
- * const { volume } = await VolumeManager.getVolume('music'); // type is no-op on iOS
- * ```
  */
-export async function getVolume(
-  type: AndroidVolumeTypes = 'music'
-): Promise<VolumeResult | number> {
-  return await VolumeManagerNativeModule.getVolume(type);
+export async function getVolume(): Promise<VolumeResult> {
+  return await VolumeManagerNativeModule.getVolume();
 }
 
 /**
  * Set the current device volume.
- * @param {number} value - The volume value to set. Must be between 0 and 1 (float).
- * @param {VolumeManagerSetVolumeConfig} config - An object with the following properties:
- * - playSound: boolean indicating whether to play a sound on volume change.
- * - type: Default is 'music', which is the same as 'system'. Available types are 'music', 'call', 'system', 'ring', 'alarm', 'notification'.
- * - showUI: boolean indicating whether to show the native volume UI.
- * @example
- * ```ts
- * // set the volume to 0.5 (50%) and play a sound when the volume is changed
- * VolumeManager.setVolume(0.5, { playSound: true, type: 'music', showUI: true });
- * ```
+ * @param {number} value - The volume value to set. Must be between 0 and 1.
+ * @param {VolumeManagerSetVolumeConfig} [config={}] - Additional configuration for setting the volume.
+ * @returns {Promise<void>} - Resolves when the operation has finished
  */
 export async function setVolume(
   value: number,
@@ -177,19 +228,35 @@ export async function setVolume(
   return await VolumeManagerNativeModule.setVolume(value, config);
 }
 
+/**
+ * Shows or hides the native volume UI.
+ * @param {object} config - An object with a boolean property 'enabled' to show or hide the native volume UI
+ * @returns {Promise<void>} - Resolves when the operation has
+
+ finished
+ */
 export async function showNativeVolumeUI(config: {
   enabled: boolean;
 }): Promise<void> {
   return VolumeManagerNativeModule.showNativeVolumeUI(config);
 }
 
+/**
+ * Adds a listener for volume changes.
+ * @param {(result: VolumeResult) => void} callback - Function to be called when volume changes
+ * @returns {EmitterSubscription} - The subscription to the volume change event
+ */
 export function addVolumeListener(
   callback: (result: VolumeResult) => void
 ): EmitterSubscription {
   return eventEmitter.addListener('RNVMEventVolume', callback);
 }
 
-// SilentListener related
+/**
+ * Adds a silent mode listener. iOS only.
+ * @param {RingMuteSwitchEventCallback} callback - Function to be called when silent mode changes
+ * @returns {EmitterSubscription | EmitterSubscriptionNoop} - The subscription to the silent mode change event
+ */
 export const addSilentListener = (
   callback: RingMuteSwitchEventCallback
 ): EmitterSubscription | EmitterSubscriptionNoop => {
@@ -200,6 +267,10 @@ export const addSilentListener = (
   return noopEmitterSubscription;
 };
 
+/**
+ * Sets the interval for the native silence check. iOS only.
+ * @param {number} value - The interval in milliseconds
+ */
 export const setNativeSilenceCheckInterval: setCheckIntervalType = (
   value: number
 ) => {
@@ -208,8 +279,10 @@ export const setNativeSilenceCheckInterval: setCheckIntervalType = (
   }
 };
 
-// Ringer mode listener
-
+/**
+ * Checks if ringer listener is enabled. Android only.
+ * @returns {Promise<boolean>} - The ringer listener status
+ */
 export const isRingerListenerEnabled = (): Promise<boolean> => {
   if (Platform.OS === 'android') {
     return SilentListenerNativeModule.isEnabled();
@@ -217,6 +290,11 @@ export const isRingerListenerEnabled = (): Promise<boolean> => {
   return Promise.resolve(true);
 };
 
+/**
+ * Adds a ringer mode listener. Android only.
+ * @param {RingerEventCallback} callback - Function to be called when ringer mode changes
+ * @returns {EmitterSubscription | EmitterSubscriptionNoop} - The subscription to the ringer mode change event
+ */
 export const addRingerListener = (
   callback: RingerEventCallback
 ): EmitterSubscription | EmitterSubscriptionNoop => {
@@ -227,6 +305,10 @@ export const addRingerListener = (
   return noopEmitterSubscription;
 };
 
+/**
+ * Removes a ringer mode listener. Android only.
+ * @param {EmitterSubscription | EmitterSubscriptionNoop} listener - The ringer mode listener to remove
+ */
 export const removeRingerListener = (
   listener: EmitterSubscription | EmitterSubscriptionNoop
 ): void => {
@@ -236,6 +318,9 @@ export const removeRingerListener = (
   }
 };
 
+/**
+ * Exported object that includes all functions
+ */
 export const VolumeManager = {
   addVolumeListener,
   getVolume,
