@@ -10,20 +10,27 @@ import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 
 @ReactModule(name = VolumeManagerSilentListenerModule.TAG)
-class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) :
+    ReactContextBaseJavaModule(reactContext) {
   companion object {
     const val TAG = "VolumeManagerSilentListener"
   }
-  private val audioManager: AudioManager = reactApplicationContext.getSystemService(AUDIO_SERVICE) as AudioManager
-  private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-      val silentStatus = Utils.getSilentStatus(audioManager)
-      val data = Arguments.createMap()
-      data.putBoolean("status", silentStatus.status)
-      data.putString("mode", silentStatus.mode.name)
-      Utils.sendEventToReactNative(eventName = "RNVMSilentEvent", reactContext = reactApplicationContext, params = data)
-    }
-  }
+  private val audioManager: AudioManager =
+      reactApplicationContext.getSystemService(AUDIO_SERVICE) as AudioManager
+  private val receiver: BroadcastReceiver =
+      object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+          val silentStatus = Utils.getSilentStatus(audioManager)
+          val data = Arguments.createMap()
+          data.putBoolean("status", silentStatus.status)
+          data.putString("mode", silentStatus.mode.name)
+          Utils.sendEventToReactNative(
+              eventName = "RNVMSilentEvent",
+              reactContext = reactApplicationContext,
+              params = data
+          )
+        }
+      }
 
   override fun getName(): String {
     return TAG
@@ -41,7 +48,9 @@ class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun isEnabled(promise: Promise) {
+
     val silentStatus = Utils.getSilentStatus(audioManager)
+
     if (silentStatus.status) {
       promise.resolve(true)
     } else {
