@@ -3,9 +3,12 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
   Platform,
   ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  SafeAreaView,
+  Button,
 } from 'react-native';
 import {
   VolumeManager,
@@ -25,8 +28,6 @@ function nullishBooleanToString(value: boolean | undefined) {
   return value === undefined ? 'unset' : value ? 'YES' : 'NO';
 }
 
-// Globally hide/show the volume UI on iOS
-
 export default function App() {
   const [currentSystemVolume, setReportedSystemVolume] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean | undefined>();
@@ -40,10 +41,8 @@ export default function App() {
   }, [hideUI]);
 
   useEffect(() => {
-    VolumeManager.getVolume('music').then((result) => {
-      setReportedSystemVolume(
-        typeof result === 'object' ? result.volume : result
-      );
+    VolumeManager.getVolume().then((result) => {
+      setReportedSystemVolume(result.volume);
       console.log('Read system volume', result);
     });
 
@@ -65,7 +64,6 @@ export default function App() {
     });
 
     return () => {
-      // remove
       volumeListener.remove();
       silentListener.remove();
       VolumeManager.removeRingerListener(ringerListener);
@@ -75,142 +73,163 @@ export default function App() {
   const { mode, error, setMode } = useRingerMode();
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View>
-        <Text style={styles.headline}>iOS / Android</Text>
-      </View>
-      <View style={styles.col}>
-        <Text>Current volume:</Text>
-        <Text>{currentSystemVolume}</Text>
-      </View>
-      <View style={styles.col}>
-        <Text>Is muted?:</Text>
-        <Text>{currentSystemVolume <= 0 ? 'YES' : 'NO'}</Text>
-      </View>
+    <SafeAreaView>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>iOS / Android</Text>
+          <View style={styles.row}>
+            <Text style={styles.text}>Current volume:</Text>
+            <Text style={styles.text}>{currentSystemVolume}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.text}>Is muted?:</Text>
+            <Text style={styles.text}>
+              {currentSystemVolume <= 0 ? 'YES' : 'NO'}
+            </Text>
+          </View>
 
-      <View style={{ marginTop: 20 }}>
-        <Text style={styles.headline3}>
-          Volume update {hideUI ? '(without toast)' : '(with toast)'}
-        </Text>
-      </View>
-      <Slider
-        style={{ width: '100%', height: 40 }}
-        minimumValue={0}
-        maximumValue={1}
-        minimumTrackTintColor="#000"
-        maximumTrackTintColor="#999"
-        onValueChange={(value) => {
-          VolumeManager.setVolume(value, { showUI: !hideUI });
-        }}
-        onSlidingComplete={async (value) => {
-          setReportedSystemVolume(value);
-        }}
-        value={currentSystemVolume}
-        step={0.001}
-      />
-
-      <Button
-        title={hideUI ? 'Show native volume Toast' : 'Hide native volume Toast'}
-        onPress={() => setHideUI((shouldHide) => !shouldHide)}
-      />
-
-      <View style={{ marginTop: 30 }}>
-        <Text style={styles.headline}>iOS only features</Text>
-      </View>
-      <View style={styles.col}>
-        <Text>Silent switch active?:</Text>
-        <Text>
-          {Platform.OS === 'ios'
-            ? `${nullishBooleanToString(
-                isMuted
-              )} (initial query: ${nullishBooleanToString(initialQuery)})`
-            : 'Unsupported on Android'}
-        </Text>
-      </View>
-
-      <View>
-        <Text style={styles.headline}>Android only features</Text>
-      </View>
-
-      <View style={styles.col}>
-        <Text>Ringer Mode listener:</Text>
-        <Text>{ringerStatus?.mode}</Text>
-      </View>
-
-      <View style={styles.col}>
-        <Text>Selected Ringer Mode:</Text>
-        <Text>
-          {mode !== undefined
-            ? modeText[mode]
-            : Platform.OS === 'ios'
-            ? 'Unsupported on iOS'
-            : 'Unknown'}
-        </Text>
-      </View>
-      <View style={{ marginTop: 20 }}>
-        <Text>Set Ringer mode:</Text>
-        <View
-          style={{
-            marginTop: 20,
-            height: 120,
-            justifyContent: 'space-between',
-          }}
-        >
-          <Button title="Silent" onPress={() => setMode(RINGER_MODE.silent)} />
-          <Button title="Normal" onPress={() => setMode(RINGER_MODE.normal)} />
-          <Button
-            title="Vibrate"
-            onPress={() => setMode(RINGER_MODE.vibrate)}
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.text}>
+              Volume update {hideUI ? '(without toast)' : '(with toast)'}
+            </Text>
+          </View>
+          <Slider
+            style={{ width: '100%', height: 40 }}
+            minimumValue={0}
+            maximumValue={1}
+            minimumTrackTintColor="#000"
+            maximumTrackTintColor="#999"
+            onValueChange={(value) => {
+              VolumeManager.setVolume(value, { showUI: !hideUI });
+            }}
+            onSlidingComplete={async (value) => {
+              setReportedSystemVolume(value);
+            }}
+            value={currentSystemVolume}
+            step={0.001}
           />
-        </View>
-      </View>
 
-      <View>
-        <View />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setHideUI((shouldHide) => !shouldHide)}
+          >
+            <Text style={styles.buttonText}>
+              {hideUI ? 'Show native volume Toast' : 'Hide native volume Toast'}
+            </Text>
+          </TouchableOpacity>
+          <View style={{ height: 10 }} />
 
-        <View
-          style={{
-            marginTop: 10,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text>{error?.message}</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>iOS only features</Text>
+            <View style={styles.row}>
+              <Text style={styles.text}>Silent switch active?:</Text>
+              <Text style={styles.text}>
+                {Platform.OS === 'ios'
+                  ? `${nullishBooleanToString(
+                      isMuted
+                    )} (initial query: ${nullishBooleanToString(initialQuery)})`
+                  : 'Unsupported on Android'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Android only features</Text>
+            <View style={styles.row}>
+              <Text style={styles.text}>Ringer Mode listener:</Text>
+              <Text style={styles.text}>{ringerStatus?.mode}</Text>
+            </View>
+
+            <View style={styles.row}>
+              <Text style={styles.text}>Selected Ringer Mode:</Text>
+              <Text style={styles.text}>
+                {mode !== undefined
+                  ? modeText[mode]
+                  : Platform.OS === 'ios'
+                  ? 'Unsupported on iOS'
+                  : 'Unknown'}
+              </Text>
+            </View>
+
+            <View style={{ marginTop: 20 }}>
+              <Text style={styles.text}>Set Ringer mode:</Text>
+              <View
+                style={{
+                  marginTop: 20,
+                  height: 120,
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Button
+                  title="Silent"
+                  onPress={() => setMode(RINGER_MODE.silent)}
+                />
+                <Button
+                  title="Normal"
+                  onPress={() => setMode(RINGER_MODE.normal)}
+                />
+                <Button
+                  title="Vibrate"
+                  onPress={() => setMode(RINGER_MODE.vibrate)}
+                />
+              </View>
+            </View>
+
+            <View>
+              <View />
+              <View
+                style={{
+                  marginTop: 10,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={styles.text}>{error?.message}</Text>
+              </View>
+            </View>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'white',
     padding: 20,
-    paddingTop: 80,
+    backgroundColor: '#F5F5F5',
   },
-  col: {
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+  card: {
+    padding: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderRadius: 10,
+    borderColor: '#DDD',
+    backgroundColor: '#FFF',
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  row: {
     flexDirection: 'row',
-    marginVertical: 5,
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    flexWrap: 'wrap',
   },
-  headline: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 10,
-  },
-  headline2: {
+  text: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginVertical: 20,
   },
-  headline3: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  button: {
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#000',
+    marginTop: 10,
   },
-  headline4: {
-    fontSize: 14,
-    color: 'lightgrey',
+  buttonText: {
+    color: '#FFF',
+    textAlign: 'center',
   },
 });
