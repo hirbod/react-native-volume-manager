@@ -228,6 +228,16 @@ The `VolumeManager` API provides several methods for controlling and monitoring 
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
+## Special thanks
+
+- Uses code from https://github.com/c19354837/react-native-system-setting
+- Uses code from https://github.com/zmxv/react-native-sound
+- Uses code from https://github.com/vitorverasm/react-native-silent
+- Uses code from https://github.com/GeorgyMishin/react-native-silent-listener
+- Fully implements https://github.com/reyhankaplan/react-native-ringer-mode
+
+I used parts, or even the full source code, of these libraries (with plenty of adjustments and rewrites to TypeScript) to make this library work on Android and iOS and to have a mostly unified API that handles everything related to volume. Since many of the packages I found were unmaintained or abandoned and only solved some of the issues, I decided to create my own. I hope you don't mind it and find it useful!
+
 ## License
 
 MIT
