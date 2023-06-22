@@ -4,6 +4,9 @@
 
 Enhance system volume control on iOS and Android with this native package. Adjust the volume, monitor changes, and create custom volume sliders and user experiences. The package provides an intuitive API for accessing the current volume level, detecting the silent switch status (iOS), and tracking ringer mode changes (Android).
 
+| ![React Native Volume Manager](ios-preview.gif) | ![React Native Volume Manager](android-preview.gif) |
+| ----------------------------------------------- | --------------------------------------------------- |
+
 ## Features
 
 - Adjust system volume
