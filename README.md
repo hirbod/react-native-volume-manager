@@ -108,7 +108,39 @@ const ringerListener = VolumeManager.addRingerListener((status) => {
 VolumeManager.removeRingerListener(ringerListener);
 ```
 
-## Hooks / Ringer Mode (Android only)
+## useSilentSwitch hook
+
+`useSilentSwitch` is a custom React hook that monitors the silent switch on an iOS device. The nativeIntervalCheck parameter (optional) allows you to set the interval at which the silent switch status is checked in seconds. If the parameter is not provided, a default interval is used (2.0).
+
+The hook returns an object with two properties: isMuted (which represents the ring/mute switch position) and initialQuery (which indicates whether the reported status is the first one after the application launch). On non-iOS platforms or for the first call, the hook returns undefined. This hook is only applicable to iOS.
+
+```tsx
+import React from 'react';
+import { View, Text } from 'react-native';
+import { useSilentSwitch } from 'react-native-volume-manager';
+
+export default function App() {
+  const status = useSilentSwitch();
+
+  return (
+    <View>
+      <Text>Silent Switch Status:</Text>
+      {status ? (
+        <View>
+          <Text>Is Muted: {status.isMuted ? 'YES' : 'NO'}</Text>
+          <Text>Is Initial Query: {status.initialQuery ? 'YES' : 'NO'}</Text>
+        </View>
+      ) : (
+        <Text>Fetching...</Text>
+      )}
+    </View>
+  );
+}
+```
+
+In this example, `useSilentSwitch` is used to monitor the status of the silent switch on iOS devices. The status of the switch (`isMuted`) and whether it's the initial query (`initialQuery`) are displayed. If the status is not available yet, "Fetching..." is displayed.
+
+### useRingerMode Hook
 
 You can use the `useRingerMode` hook to get and set the ringer mode on Android:
 
@@ -150,24 +182,43 @@ export default function App() {
 
 ## API
 
-Here are some of the available methods in the `VolumeManager` API:
+The `VolumeManager` API provides several methods for controlling and monitoring volume settings on both iOS and Android devices. Here are some of the available methods, sorted by platform and provided with a brief description:
 
-- `showNativeVolumeUI(config: { enabled: boolean }): void`
-- `getVolume(): Promise<VolumeResult>`
-- `setVolume(value: number, config?: object): Promise<void>`
-- `addVolumeListener(callback): void`
-- `enableInSilenceMode(value: boolean): void`
-- `setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean): void`
-- `setMode(mode: AVAudioSessionMode): void`
-- `addRingerListener(callback): void`
-- `removeRingerListener(listener): void`
-- `isRingerListenerEnabled(): boolean`
-- `getRingerMode(): Promise<RingerModeType>`
-- `setRingerMode(mode: RingerModeType): Promise<void>`
-- `requestDndAccess(): void`
-- `checkDndAccess(): Promise<boolean>`
+### Methods available on both iOS and Android:
 
-For detailed API documentation and additional examples, please refer to the [GitHub repository](https://github.com/your-repo).
+- `showNativeVolumeUI(config: { enabled: boolean }): void` - This method allows you to control whether the native volume UI is displayed when volume changes are made.
+
+- `getVolume(): Promise<VolumeResult>` - Asynchronously retrieves the current volume level. It now returns `VolumeResult` for more consistent results.
+
+- `setVolume(value: number, config?: object): Promise<void>` - This method allows you to set the device's volume level.
+
+- `addVolumeListener(callback): void` - This method allows you to add a listener for volume changes.
+
+- `getRingerMode(): Promise<RingerModeType>` - This method retrieves the current ringer mode (silent, vibrate, normal) of the device.
+
+- `setRingerMode(mode: RingerModeType): Promise<void>` - This method sets the ringer mode of the device to silent, vibrate, or normal.
+
+### Methods available on iOS only:
+
+- `enableInSilenceMode(value: boolean): void` - This method allows you to enable or disable the silent mode on the device.
+
+- `setNativeSilenceCheckInterval(value: number): void` - This method allows you to set the interval for checking the silent switch status.
+
+- `setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean): void` - This method sets the AVAudioSessionCategory for your app's audio session.
+
+- `setMode(mode: AVAudioSessionMode): void` - This method sets the AVAudioSessionMode for your app's audio session.
+
+### Methods available on Android only:
+
+- `addRingerListener(callback): void` - This method allows you to add a listener for ringer mode changes.
+
+- `removeRingerListener(listener): void` - This method allows you to remove a previously added ringer mode listener.
+
+- `isRingerListenerEnabled(): boolean` - This method checks whether a ringer mode listener is enabled.
+
+- `requestDndAccess(): void` - This method requests the user to grant 'Do Not Disturb' access.
+
+- `checkDndAccess(): Promise<boolean>` - This method checks if 'Do Not Disturb' access has been granted.
 
 ## Contributing
 
