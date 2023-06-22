@@ -14,6 +14,7 @@ Enhance system volume control on iOS and Android with this native package. Adjus
 - Suppress default volume UI
 - Access current volume level
 - Detect silent switch status (iOS)
+- Enable/disable audio session and change category (iOS)
 - Track ringer mode changes (Android)
 
 ## Installation
