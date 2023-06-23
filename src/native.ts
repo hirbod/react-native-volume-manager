@@ -102,10 +102,10 @@ export async function setRingerMode(
 }
 
 /**
- * Enables or disables the VolumeManager
- * @param {boolean} [enabled=true] - Enable or disable the VolumeManager
- * @param {boolean} [async=true] - Perform operation asynchronously
- * @returns {Promise<void>} - Resolves when the operation has finished
+ * iOS only. Enables or disables the audio session. When enabled, the session's category is set to ambient, allowing the audio from this session to mix with other audio currently playing on the device.
+ * @param {boolean} [enabled=true] - Whether to enable or disable the audio session.
+ * @param {boolean} [async=true] - Whether to perform the operation asynchronously. When set to true, this function will not block the UI thread.
+ * @returns {Promise<void>} - Resolves when the operation has finished. If an error occurs, it will be rejected with an instance of Error.
  */
 export async function enable(
   enabled: boolean = true,
@@ -115,12 +115,10 @@ export async function enable(
 }
 
 /**
- * Sets the active status of the VolumeManager. Android only.
- * @param {boolean} [value=true] - Active status
- * @param {boolean} [async=true] - Perform operation asynchronously
- * @
-
-returns {Promise<void>} - Resolves when the operation has finished
+ * iOS only. Activates or deactivates the audio session. Does not change the audio session's category. When the session is deactivated, other audio sessions that had been interrupted by this one are reactivated and notified.
+ * @param {boolean} [value=true] - Whether to activate or deactivate the audio session.
+ * @param {boolean} [async=true] - Whether to perform the operation asynchronously. When set to true, this function will not block the JavaScript thread.
+ * @returns {Promise<void>} - Resolves when the operation has finished. If an error occurs, it will be rejected with an instance of Error. On Android, this function returns undefined.
  */
 export async function setActive(
   value: boolean = true,
@@ -284,7 +282,7 @@ export const setNativeSilenceCheckInterval: setCheckIntervalType = (
  * @returns {Promise<boolean>} - The ringer listener status
  */
 export const isRingerListenerEnabled = (): Promise<boolean> => {
-  if (Platform.OS === 'android') {
+  if (isAndroid) {
     return SilentListenerNativeModule.isEnabled();
   }
   return Promise.resolve(true);
@@ -298,7 +296,7 @@ export const isRingerListenerEnabled = (): Promise<boolean> => {
 export const addRingerListener = (
   callback: RingerEventCallback
 ): EmitterSubscription | EmitterSubscriptionNoop => {
-  if (Platform.OS === 'android') {
+  if (isAndroid) {
     SilentListenerNativeModule.registerObserver();
     return silentEventEmitter.addListener('RNVMSilentEvent', callback);
   }
@@ -312,7 +310,7 @@ export const addRingerListener = (
 export const removeRingerListener = (
   listener: EmitterSubscription | EmitterSubscriptionNoop
 ): void => {
-  if (Platform.OS === 'android') {
+  if (isAndroid) {
     SilentListenerNativeModule.unregisterObserver();
     listener && listener.remove();
   }
