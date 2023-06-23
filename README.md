@@ -186,43 +186,51 @@ export default function App() {
 
 ## API
 
-The `VolumeManager` API provides several methods for controlling and monitoring volume settings on both iOS and Android devices. Here are some of the available methods, sorted by platform and provided with a brief description:
+The `VolumeManager` API provides an interface for controlling and observing volume settings on iOS and Android devices. The API is designed to offer a consistent experience across both platforms where possible, with some platform-specific functionality provided where necessary.
 
-### Methods available on both iOS and Android:
+### Cross-platform methods:
 
-- `showNativeVolumeUI(config: { enabled: boolean }): void` - This method allows you to control whether the native volume UI is displayed when volume changes are made.
+- `showNativeVolumeUI(config: { enabled: boolean }): Promise<void>`: This asynchronous function allows you to control the visibility of the native volume UI when volume changes occur.
 
-- `getVolume(): Promise<VolumeResult>` - Asynchronously retrieves the current volume level. It now returns `VolumeResult` for more consistent results.
+- `getVolume(): Promise<VolumeResult>`: Asynchronously fetches the current volume level and returns a promise that resolves to an object, `VolumeResult`, containing the current volume information.
 
-- `setVolume(value: number, config?: object): Promise<void>` - This method allows you to set the device's volume level.
+- `setVolume(value: number, config?: VolumeManagerSetVolumeConfig): Promise<void>`: Allows you to programmatically adjust the device's volume level. The `value` parameter should be between 0 and 1, and `config` parameter is an optional object for additional configuration settings.
 
-- `addVolumeListener(callback): void` - This method allows you to add a listener for volume changes.
+- `addVolumeListener(callback: (result: VolumeResult) => void): EmitterSubscription`: Allows you to add a listener that will be called when the device's volume changes. The listener receives an object, `VolumeResult`, that contains the updated volume information.
 
-- `getRingerMode(): Promise<RingerModeType>` - This method retrieves the current ringer mode (silent, vibrate, normal) of the device.
+### iOS-only methods:
 
-- `setRingerMode(mode: RingerModeType): Promise<void>` - This method sets the ringer mode of the device to silent, vibrate, or normal.
+- `enable(enabled: boolean, async: boolean): Promise<void>`: Enables or disables the audio session. Enabling the audio session sets the session's category to 'ambient', allowing it to mix with other audio.
 
-### Methods available on iOS only:
+- `setActive(value: boolean, async: boolean): Promise<void>`: Activates or deactivates the audio session. Deactivating the session reactivates any sessions that were interrupted by this one.
 
-- `enableInSilenceMode(value: boolean): void` - This method allows you to enable or disable the silent mode on the device.
+- `setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean): Promise<void>`: Sets the category for the AVAudioSession in your iOS app. `mixWithOthers` is an optional parameter that, if true, allows your audio to mix with audio from other apps.
 
-- `setNativeSilenceCheckInterval(value: number): void` - This method allows you to set the interval for checking the silent switch status.
+- `setMode(mode: AVAudioSessionMode): Promise<void>`: Sets the mode for the AVAudioSession in your iOS app.
 
-- `setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean): void` - This method sets the AVAudioSessionCategory for your app's audio session.
+- `enableInSilenceMode(value: boolean): Promise<void>`: If value is true, this function allows your app to play audio even when the device is in silent mode. When value is false, audio will not play in silent mode.
 
-- `setMode(mode: AVAudioSessionMode): void` - This method sets the AVAudioSessionMode for your app's audio session.
+- `setNativeSilenceCheckInterval(value: number)`: Sets the interval at which the native system checks the state of the silent switch.
 
-### Methods available on Android only:
+- `addSilentListener(callback: RingMuteSwitchEventCallback): EmitterSubscription | EmitterSubscriptionNoop`: Adds a listener that will be called when the silent switch state changes.
 
-- `addRingerListener(callback): void` - This method allows you to add a listener for ringer mode changes.
+### Android-only methods:
 
-- `removeRingerListener(listener): void` - This method allows you to remove a previously added ringer mode listener.
+- `getRingerMode(): Promise<RingerModeType | undefined>`: Asynchronously fetches the current ringer mode of the device (silent, vibrate, or normal).
 
-- `isRingerListenerEnabled(): boolean` - This method checks whether a ringer mode listener is enabled.
+- `setRingerMode(mode: RingerModeType): Promise<RingerModeType | undefined>`: Sets the device's ringer mode.
 
-- `requestDndAccess(): void` - This method requests the user to grant 'Do Not Disturb' access.
+- `isRingerListenerEnabled(): Promise<boolean>`: Asynchronously checks whether a ringer mode listener is enabled.
 
-- `checkDndAccess(): Promise<boolean>` - This method checks if 'Do Not Disturb' access has been granted.
+- `addRingerListener(callback: RingerEventCallback): EmitterSubscription | EmitterSubscriptionNoop`: Adds a listener that will be called when the ringer mode changes.
+
+- `removeRingerListener(listener: EmitterSubscription | EmitterSubscriptionNoop): void`: Removes a previously added ringer mode listener.
+
+- `checkDndAccess(): Promise<boolean | undefined>`: Asynchronously checks if 'Do Not Disturb' access has been granted.
+
+- `requestDndAccess(): Promise<boolean | undefined>`: Initiates a request for 'Do Not Disturb' access.
+
+Please note that while this API tries to provide a consistent experience across both platforms, some methods are platform-specific due to the differences in how iOS and Android handle
 
 ## Contributing
 
