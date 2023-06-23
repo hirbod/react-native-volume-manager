@@ -33,7 +33,12 @@ yarn add react-native-volume-manager
 
 For React Native >= 0.60, manual linking is not required with Autolinking.
 
-> Note: This library is incompatible with Expo Go. To use it, you can install a custom development client as recommended in 2022.
+> Note: This library is incompatible with Expo Go. To use it, you can install a custom development client as recommended in 2023.
+
+## Simulators / Emulators
+
+- iOS: This package only runs on a real device, and the events are not triggered on the simulator. However, you can hide the native UI inside the Simulator.
+- Android: It runs on both a real device (API level 21+) and the emulator (API level 33+).
 
 ## Usage
 
