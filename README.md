@@ -37,7 +37,7 @@ For React Native >= 0.60, manual linking is not required with Autolinking.
 
 ## Simulators / Emulators
 
-- iOS: This package only runs on a real device, and the events are not triggered on the simulator. However, you can hide the native UI inside the Simulator.
+- iOS: The AVAudioSession API offers control over audio behaviors and settings on iOS devices. However, some hardware-specific features of AVAudioSession, such as volume control and audio route selection, don't have equivalent functionalities on macOS, which the simulator runs on. As a result, this package operates only on a real device, with events not being triggered on the simulator.
 - Android: It runs on both a real device (API level 21+) and the emulator (API level 33+).
 
 ## Usage
