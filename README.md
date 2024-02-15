@@ -33,7 +33,7 @@ yarn add react-native-volume-manager
 
 For React Native >= 0.60, manual linking is not required with Autolinking.
 
-> Note: This library is incompatible with Expo Go. To use it, you can install a custom development client as recommended in 2023.
+> Note: This library is incompatible with Expo Go. To use it, you can install a [custom development client](https://docs.expo.dev/develop/development-builds/create-a-build/) as recommended in 2023.
 
 ## Simulators / Emulators
 
