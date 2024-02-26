@@ -293,9 +293,11 @@ public class VolumeManagerModule
   private void cleanupKeyListener() {
     runOnUiThread(() -> {
       if (!hardwareButtonListenerRegistered) return;
-      View rootView =
-        ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
-      rootView.setOnKeyListener(null);
+      if (mContext.getCurrentActivity() != null) {
+        View rootView =
+          ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
+        rootView.setOnKeyListener(null);
+      }
       hardwareButtonListenerRegistered = false;
     });
   }
