@@ -86,12 +86,14 @@ public class VolumeManagerModule
 
   private void setupKeyListener() {
     runOnUiThread(() -> {
+      if (hardwareButtonListenerRegistered) return;
+      if (mContext.getCurrentActivity() == null) return;
+
       View rootView =
         ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
       rootView.setFocusableInTouchMode(true);
       rootView.requestFocus();
 
-      if (hardwareButtonListenerRegistered) return;
 
       rootView.setOnKeyListener((v, keyCode, event) -> {
         hardwareButtonListenerRegistered = true;
@@ -293,6 +295,8 @@ public class VolumeManagerModule
   private void cleanupKeyListener() {
     runOnUiThread(() -> {
       if (!hardwareButtonListenerRegistered) return;
+      if (mContext.getCurrentActivity() == null) return;
+      
       View rootView =
         ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
       rootView.setOnKeyListener(null);
