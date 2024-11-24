@@ -192,8 +192,6 @@ RCT_EXPORT_METHOD(getVolume
   });
 }
 
-RCT_EXTERN_METHOD(setMuteListenerInterval : (nonnull NSNumber *)newInterval)
-
 RCT_EXPORT_METHOD(enable : (BOOL)enabled async : (BOOL)async) {
   if (async) {
     dispatch_async(
