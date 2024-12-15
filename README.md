@@ -2,7 +2,7 @@
 
 # react-native-volume-manager
 
-Take control of system volume on iOS and Android with this powerful native package. Seamlessly adjust volume levels, track changes, and design custom sliders for a tailored user experience. With an intuitive API, you can access the current volume, detect the silent switch on iOS, and monitor ringer mode changes on Android.
+Take control of system volume on **iOS** and **Android** with this powerful native package. Seamlessly adjust volume levels, track changes, and design custom sliders for a tailored user experience. With an intuitive API, you can access the current volume, detect the silent switch on iOS, and monitor ringer mode changes on Android.
 
 | ![React Native Volume Manager](ios-preview.gif) | ![React Native Volume Manager](android-preview.gif) |
 | ----------------------------------------------- | --------------------------------------------------- |
@@ -57,6 +57,10 @@ If you are using Expo, make sure to use expo-build-properties to set the minimum
 - iOS: The AVAudioSession API provides control over audio behaviors and settings on iOS devices. However, hardware-specific features like volume control and audio route selection are unavailable on macOS, where the simulator runs. Consequently, this package only works on a physical device, as events won’t trigger in the simulator.
 
 - Android: It runs on both a real device (API level 21+) and the emulator (API level 33+).
+
+## Web
+
+This library is not functional on the web. While the package exports no-op methods for web usage, allowing you to include it without any issues, these methods have no actual effect.
 
 ## Usage
 

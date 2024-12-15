@@ -4,7 +4,7 @@ import {
   getRingerMode,
   setNativeSilenceCheckInterval,
   setRingerMode,
-} from './native';
+} from './module';
 import type { RingerModeType } from './types';
 
 /**

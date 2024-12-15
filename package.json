@@ -36,6 +36,10 @@
   "keywords": [
     "react-native",
     "ios",
+    "expo",
+    "volume",
+    "mute",
+    "silent",
     "android"
   ],
   "repository": "https://github.com/hirbod/react-native-volume-manager",
