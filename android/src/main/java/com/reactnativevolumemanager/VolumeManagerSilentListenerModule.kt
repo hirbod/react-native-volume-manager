@@ -42,11 +42,13 @@ class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    @Suppress("UNUSED_PARAMETER")
     fun addListener(eventName: String?) {
         // Keep: Required for RN built in Event Emitter Calls.
     }
 
     @ReactMethod
+    @Suppress("UNUSED_PARAMETER")
     fun removeListeners(count: Int) {
         // Keep: Required for RN built in Event Emitter Calls.
     }
