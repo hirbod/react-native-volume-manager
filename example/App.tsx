@@ -9,6 +9,7 @@ import {
   StatusBar,
   SafeAreaView,
   Button,
+  Alert,
 } from 'react-native';
 import {
   VolumeManager,
@@ -173,6 +174,18 @@ export default function App() {
                   title="Vibrate"
                   onPress={() => setMode(RINGER_MODE.vibrate)}
                 />
+                <Button
+                  title="Check if device is silent"
+                  onPress={async () => {
+                    const result = await VolumeManager.isAndroidDeviceSilent();
+                    Alert.alert(
+                      'Info',
+                      result
+                        ? 'Device is silent. This is a silent mode or muted volume or vibrate mode or do not disturb mode.'
+                        : 'Device is not silent. This is a normal mode. Check ringer mode to get more details'
+                    );
+                  }}
+                />
               </View>
             </View>
 
@@ -180,7 +193,7 @@ export default function App() {
               <View />
               <View
                 style={{
-                  marginTop: 10,
+                  marginTop: 30,
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
