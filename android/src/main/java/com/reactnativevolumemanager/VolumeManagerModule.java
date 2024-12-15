@@ -85,13 +85,15 @@ public class VolumeManagerModule
   }
 
   private void setupKeyListener() {
+
+    if (hardwareButtonListenerRegistered) return;
+    if (mContext.getCurrentActivity() == null) return;
+
     runOnUiThread(() -> {
       View rootView =
         ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
       rootView.setFocusableInTouchMode(true);
       rootView.requestFocus();
-
-      if (hardwareButtonListenerRegistered) return;
 
       rootView.setOnKeyListener((v, keyCode, event) -> {
         hardwareButtonListenerRegistered = true;
@@ -291,8 +293,10 @@ public class VolumeManagerModule
   }
 
   private void cleanupKeyListener() {
+    if (!hardwareButtonListenerRegistered) return;
+    if (mContext.getCurrentActivity() == null) return;
+
     runOnUiThread(() -> {
-      if (!hardwareButtonListenerRegistered) return;
       View rootView =
         ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
       rootView.setOnKeyListener(null);
@@ -344,27 +348,50 @@ public class VolumeManagerModule
 
     @Override
     public void onReceive(Context context, Intent intent) {
-      if (intent.getAction().equals("android.media.VOLUME_CHANGED_ACTION")) {
-        WritableMap para = Arguments.createMap();
-        para.putDouble("volume", getNormalizationVolume(VOL_MUSIC));
-        para.putDouble(VOL_VOICE_CALL, getNormalizationVolume(VOL_VOICE_CALL));
-        para.putDouble(VOL_SYSTEM, getNormalizationVolume(VOL_SYSTEM));
-        para.putDouble(VOL_RING, getNormalizationVolume(VOL_RING));
-        para.putDouble(VOL_MUSIC, getNormalizationVolume(VOL_MUSIC));
-        para.putDouble(VOL_ALARM, getNormalizationVolume(VOL_ALARM));
-        para.putDouble(
-          VOL_NOTIFICATION,
-          getNormalizationVolume(VOL_NOTIFICATION)
-        );
-        try {
-          mContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-            .emit("RNVMEventVolume", para);
-        } catch (RuntimeException e) {
-          // Possible to interact with volume before JS bundle execution is finished.
-          // This is here to avoid app crashing.
+        if (intent.getAction().equals("android.media.VOLUME_CHANGED_ACTION")) {
+            int streamType = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1);
+
+            WritableMap para = Arguments.createMap();
+
+            // Only emit the volume that actually changed
+            switch (streamType) {
+                case AudioManager.STREAM_VOICE_CALL:
+                    para.putDouble("volume", getNormalizationVolume(VOL_VOICE_CALL));
+                    para.putString("type", VOL_VOICE_CALL);
+                    break;
+                case AudioManager.STREAM_SYSTEM:
+                    para.putDouble("volume", getNormalizationVolume(VOL_SYSTEM));
+                    para.putString("type", VOL_SYSTEM);
+                    break;
+                case AudioManager.STREAM_RING:
+                    para.putDouble("volume", getNormalizationVolume(VOL_RING));
+                    para.putString("type", VOL_RING);
+                    break;
+                case AudioManager.STREAM_MUSIC:
+                    para.putDouble("volume", getNormalizationVolume(VOL_MUSIC));
+                    para.putString("type", VOL_MUSIC);
+                    break;
+                case AudioManager.STREAM_ALARM:
+                    para.putDouble("volume", getNormalizationVolume(VOL_ALARM));
+                    para.putString("type", VOL_ALARM);
+                    break;
+                case AudioManager.STREAM_NOTIFICATION:
+                    para.putDouble("volume", getNormalizationVolume(VOL_NOTIFICATION));
+                    para.putString("type", VOL_NOTIFICATION);
+                    break;
+                default:
+                    return; // Unknown stream type, don't emit event
+            }
+
+            try {
+                mContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("RNVMEventVolume", para);
+            } catch (RuntimeException e) {
+                // Possible to interact with volume before JS bundle execution is finished.
+                // This is here to avoid app crashing.
+            }
         }
-      }
     }
   }
 }
