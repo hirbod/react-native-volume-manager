@@ -44,12 +44,11 @@ If you are using Expo, make sure to use expo-build-properties to set the minimum
       "buildToolsVersion": "34.0.0"
     },
     "ios": {
-      "deploymentTarget": "15.2",
+      "deploymentTarget": "15.2"
     }
   }
 ]
 ```
-
 
 > Note: This library is incompatible with Expo Go. To use it, you can install a [custom development client](https://docs.expo.dev/develop/development-builds/create-a-build/).
 
@@ -244,7 +243,7 @@ The `VolumeManager` API provides an interface for controlling and observing volu
 
 - `setRingerMode(mode: RingerModeType): Promise<RingerModeType | undefined>`: Sets the device's ringer mode.
 
-- `isRingerListenerEnabled(): Promise<boolean>`: Asynchronously checks whether a ringer mode listener is enabled.
+- `isAndroidDeviceSilent(): Promise<boolean | null>`: Asynchronously checks if the device is in a silent state (including silent mode, vibrate mode, or muted volume / do not disturb mode).
 
 - `addRingerListener(callback: RingerEventCallback): EmitterSubscription | EmitterSubscriptionNoop`: Adds a listener that will be called when the ringer mode changes.
 
