@@ -135,7 +135,7 @@ public class VolumeManagerModule
   }
 
   @ReactMethod
-  public void enable(final Boolean enabled) {
+  public void enable(final Boolean enabled, final Boolean async) {
     // no op
   }
 
