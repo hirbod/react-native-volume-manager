@@ -86,10 +86,11 @@ public class VolumeManagerModule
 
   private void setupKeyListener() {
 
-    if (hardwareButtonListenerRegistered) return;
-    if (mContext.getCurrentActivity() == null) return;
-
     runOnUiThread(() -> {
+
+      if (hardwareButtonListenerRegistered) return;
+      if (mContext.getCurrentActivity() == null) return;
+
       View rootView =
         ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
       rootView.setFocusableInTouchMode(true);
@@ -293,10 +294,11 @@ public class VolumeManagerModule
   }
 
   private void cleanupKeyListener() {
-    if (!hardwareButtonListenerRegistered) return;
-    if (mContext.getCurrentActivity() == null) return;
-
     runOnUiThread(() -> {
+
+      if (!hardwareButtonListenerRegistered) return;
+      if (mContext.getCurrentActivity() == null) return;
+
       View rootView =
         ((ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView());
       rootView.setOnKeyListener(null);
@@ -319,6 +321,11 @@ public class VolumeManagerModule
 
   @Override
   public void onHostResume() {
+    // Reapply the native UI suppression if it was disabled
+    if (!showNativeVolumeUI) {
+      showNativeVolumeUI = false;
+    }
+
     setupKeyListener();
     registerVolumeReceiver();
   }
@@ -326,12 +333,12 @@ public class VolumeManagerModule
   @Override
   public void onHostPause() {
     unregisterVolumeReceiver();
-    cleanupKeyListener(); // Release the key listener when the screen loses focus
+    cleanupKeyListener();
   }
 
   @Override
   public void onHostDestroy() {
-    cleanupKeyListener(); // Release the key listener when the root view is destroyed
+    cleanupKeyListener();
   }
 
   private class VolumeBroadcastReceiver extends BroadcastReceiver {
