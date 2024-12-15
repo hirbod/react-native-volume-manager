@@ -87,28 +87,13 @@ export interface VolumeManagerSetVolumeConfig {
  * @export
  * @interface VolumeResult
  * @property {number} volume - The volume level. Both for iOS and Android. Defaults to music.
- * @property {number} alarm - The alarm volume. Android only.
- * @property {number} call - The call volume. Android only.
- * @property {number} music - The music volume. Android only.
- * @property {number} notification - The notification volume. Android only.
- * @property {number} ring - The ring volume. Android only.
- * @property {number} system - The system volume. Android only.
+ * @property {AndroidVolumeTypes} type - The type of volume. Android only.
  */
 export interface VolumeResult {
   // Both iOS and Android (defaults to type music for android)
   volume: number;
   // Android only
-  alarm?: number;
-  // Android only
-  call?: number;
-  // Android only
-  music?: number;
-  // Android only
-  notification?: number;
-  // Android only
-  ring?: number;
-  // Android only
-  system?: number;
+  type?: AndroidVolumeTypes;
 }
 
 // Accepted Ringer Mode values
