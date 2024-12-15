@@ -2,7 +2,7 @@
 
 # react-native-volume-manager
 
-Enhance system volume control on iOS and Android with this native package. Adjust the volume, monitor changes, and create custom volume sliders and user experiences. The package provides an intuitive API for accessing the current volume level, detecting the silent switch status (iOS), and tracking ringer mode changes (Android).
+Take control of system volume on iOS and Android with this powerful native package. Seamlessly adjust volume levels, track changes, and design custom sliders for a tailored user experience. With an intuitive API, you can access the current volume, detect the silent switch on iOS, and monitor ringer mode changes on Android.
 
 | ![React Native Volume Manager](ios-preview.gif) | ![React Native Volume Manager](android-preview.gif) |
 | ----------------------------------------------- | --------------------------------------------------- |
@@ -31,13 +31,32 @@ Using Yarn:
 yarn add react-native-volume-manager
 ```
 
-For React Native >= 0.60, manual linking is not required with Autolinking.
+New and old architecture are supported. React Native 0.76+ is required. iOS 15+ is required.
+If you are using Expo, make sure to use expo-build-properties to set the minimum iOS version to 15. (Default in SDK 52+). Kotlin 1.8+ is required. No support for older versions!
 
-> Note: This library is incompatible with Expo Go. To use it, you can install a [custom development client](https://docs.expo.dev/develop/development-builds/create-a-build/) as recommended in 2023.
+```json
+[
+  "expo-build-properties",
+  {
+    "android": {
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0"
+    },
+    "ios": {
+      "deploymentTarget": "15.2",
+    }
+  }
+]
+```
+
+
+> Note: This library is incompatible with Expo Go. To use it, you can install a [custom development client](https://docs.expo.dev/develop/development-builds/create-a-build/).
 
 ## Simulators / Emulators
 
-- iOS: The AVAudioSession API offers control over audio behaviors and settings on iOS devices. However, some hardware-specific features of AVAudioSession, such as volume control and audio route selection, don't have equivalent functionalities on macOS, which the simulator runs on. As a result, this package operates only on a real device, with events not being triggered on the simulator.
+- iOS: The AVAudioSession API provides control over audio behaviors and settings on iOS devices. However, hardware-specific features like volume control and audio route selection are unavailable on macOS, where the simulator runs. Consequently, this package only works on a physical device, as events won’t trigger in the simulator.
+
 - Android: It runs on both a real device (API level 21+) and the emulator (API level 33+).
 
 ## Usage
