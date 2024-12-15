@@ -278,14 +278,14 @@ export const setNativeSilenceCheckInterval: setCheckIntervalType = (
 };
 
 /**
- * Checks if ringer listener is enabled. Android only.
- * @returns {Promise<boolean>} - The ringer listener status
+ * Checks if the device is in a silent state (including silent mode, vibrate mode, or muted volume). Android only.
+ * @returns {Promise<boolean | null>} - Returns true if device is in a silent state, false otherwise, or null if not Android
  */
-export const isRingerListenerEnabled = (): Promise<boolean> => {
+export const isAndroidDeviceSilent = (): Promise<boolean | null> => {
   if (isAndroid) {
-    return SilentListenerNativeModule.isEnabled();
+    return SilentListenerNativeModule.isDeviceSilent();
   }
-  return Promise.resolve(true);
+  return Promise.resolve(null);
 };
 
 /**
@@ -324,7 +324,7 @@ export const VolumeManager = {
   getVolume,
   setVolume,
   showNativeVolumeUI,
-  isRingerListenerEnabled,
+  isAndroidDeviceSilent,
   addSilentListener,
   addRingerListener,
   removeRingerListener,

@@ -54,7 +54,7 @@ class VolumeManagerSilentListenerModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun isEnabled(promise: Promise) {
+    fun isDeviceSilent(promise: Promise) {
         val silentStatus = Utils.getSilentStatus(audioManager)
         promise.resolve(silentStatus.status)
     }
