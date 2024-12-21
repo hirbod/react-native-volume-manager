@@ -90,8 +90,6 @@ const volumeListener = VolumeManager.addVolumeListener((result) => {
 volumeListener.remove();
 ```
 
-For more usage examples and detailed API documentation, please refer to the [GitHub repository](https://github.com/your-repo).
-
 ## iOS Audio Session Management
 
 This section provides methods related to AVAudioSession on iOS. For example:
