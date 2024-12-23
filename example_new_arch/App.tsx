@@ -49,8 +49,19 @@ export default function App() {
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
       volumeChangedByListener.current = true;
-      setReportedSystemVolume(result.volume);
-      console.log('Volume changed', result);
+
+      if (
+        (Platform.OS === 'android' && result.type === 'music') ||
+        Platform.OS === 'ios'
+      ) {
+        setReportedSystemVolume(result.volume);
+        console.log('Volume changed, updating state', result);
+      } else {
+        console.log(
+          'Volume changed, but not for type music, not updating state',
+          result
+        );
+      }
     });
 
     const silentListener = VolumeManager.addSilentListener((status) => {
