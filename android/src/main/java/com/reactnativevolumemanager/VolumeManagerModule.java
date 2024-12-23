@@ -48,12 +48,13 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
   private final ReactApplicationContext mContext;
   private final AudioManager am;
-  private final VolumeBroadcastReceiver volumeBR;
+  private VolumeBroadcastReceiver volumeBR;
 
   // State tracking
   private Boolean showNativeVolumeUI = true;  // Controls visibility of system volume UI
   private Boolean hardwareButtonListenerRegistered = false;  // Tracks key listener state
   private ViewTreeObserver.OnGlobalFocusChangeListener globalFocusListener;  // Handles TextInput focus
+  private Boolean volumeMonitoringEnabled = false; // Tracks if volume monitoring is enabled
 
   String category;
 
@@ -62,7 +63,6 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     mContext = reactContext;
     reactContext.addLifecycleEventListener(this);
     am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-    volumeBR = new VolumeBroadcastReceiver();
     this.category = null;
   }
 
@@ -70,6 +70,10 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
    * Registers broadcast receiver for volume changes if not already registered
    */
   private void registerVolumeReceiver() {
+    if (volumeBR == null) {
+      volumeBR = new VolumeBroadcastReceiver();
+    }
+
     if (!volumeBR.isRegistered()) {
       IntentFilter filter = new IntentFilter("android.media.VOLUME_CHANGED_ACTION");
       mContext.registerReceiver(volumeBR, filter);
@@ -81,7 +85,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
    * Safely unregisters the volume broadcast receiver
    */
   private void unregisterVolumeReceiver() {
-    if (volumeBR.isRegistered()) {
+    if (volumeBR != null && volumeBR.isRegistered()) {
       try {
         mContext.unregisterReceiver(volumeBR);
         volumeBR.setRegistered(false);
@@ -196,12 +200,16 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
   @ReactMethod
   public void addListener(String eventName) {
-    // Keep: Required for RN built in Event Emitter Calls.
+    if (eventName.equals("RNVMEventVolume")) {
+      volumeMonitoringEnabled = true;
+      registerVolumeReceiver();
+    }
   }
 
   @ReactMethod
   public void removeListeners(int count) {
-    // Keep: Required for RN built in Event Emitter Calls.
+    volumeMonitoringEnabled = false;
+    unregisterVolumeReceiver();
   }
 
   // Volume and ringer mode methods
@@ -350,7 +358,10 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
     });
     hardwareButtonListenerRegistered = false;  // Force re-setup of listeners
     setupKeyListener();
-    registerVolumeReceiver();
+
+    if (volumeMonitoringEnabled) {
+      registerVolumeReceiver();
+    }
   }
 
   /**
@@ -358,7 +369,9 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
    */
   @Override
   public void onHostPause() {
-    unregisterVolumeReceiver();
+    if (volumeMonitoringEnabled) {
+      unregisterVolumeReceiver();
+    }
     cleanupKeyListener();
   }
 
