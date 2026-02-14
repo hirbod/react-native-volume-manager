@@ -106,6 +106,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
 
       Activity activity = mContext.getCurrentActivity();
       View contentView = activity.findViewById(android.R.id.content);
+      if (contentView == null) return;
 
       // Handles focus changes between TextInputs and other views
       // Restores volume key functionality when leaving TextInput
@@ -113,7 +114,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
         @Override
         public void onGlobalFocusChanged(View oldFocus, View newFocus) {
           if (oldFocus instanceof EditText && !(newFocus instanceof EditText)) {
-            contentView.requestFocus();
+            safelyRequestFocus(contentView);
           }
         }
       };
@@ -121,7 +122,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
       contentView.getViewTreeObserver().addOnGlobalFocusChangeListener(globalFocusListener);
       contentView.setOnKeyListener(null);  // Clear any existing listeners
       contentView.setFocusableInTouchMode(true);
-      contentView.requestFocus();
+      safelyRequestFocus(contentView);
 
       // Handle volume key events when native UI is hidden
       contentView.setOnKeyListener((v, keyCode, event) -> {
@@ -171,6 +172,34 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
       contentView.setOnKeyListener(null);
       hardwareButtonListenerRegistered = false;
     });
+  }
+
+  /**
+   * Requests focus defensively to avoid OEM/framework crashes during accessibility traversal.
+   */
+  private void safelyRequestFocus(View view) {
+    if (view == null || !view.isAttachedToWindow()) return;
+    try {
+      view.requestFocus();
+    } catch (IllegalArgumentException e) {
+      Log.w(TAG, "Ignoring focus request crash in VolumeManagerModule", e);
+    } catch (RuntimeException e) {
+      Log.w(TAG, "Ignoring runtime focus failure in VolumeManagerModule", e);
+    }
+  }
+
+  /**
+   * Clears focus defensively to avoid OEM/framework crashes during accessibility traversal.
+   */
+  private void safelyClearFocus(View view) {
+    if (view == null || !view.isAttachedToWindow()) return;
+    try {
+      view.clearFocus();
+    } catch (IllegalArgumentException e) {
+      Log.w(TAG, "Ignoring clearFocus crash in VolumeManagerModule", e);
+    } catch (RuntimeException e) {
+      Log.w(TAG, "Ignoring runtime clearFocus failure in VolumeManagerModule", e);
+    }
   }
 
   // React Native methods
@@ -352,8 +381,8 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
       Activity activity = mContext.getCurrentActivity();
       if (activity != null) {
         View contentView = activity.findViewById(android.R.id.content);
-        contentView.clearFocus();  // Clear existing focus
-        contentView.requestFocus();  // Request fresh focus
+        safelyClearFocus(contentView);  // Clear existing focus defensively
+        safelyRequestFocus(contentView);  // Request fresh focus defensively
       }
     });
     hardwareButtonListenerRegistered = false;  // Force re-setup of listeners
