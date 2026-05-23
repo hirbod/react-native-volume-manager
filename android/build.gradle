@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:4.2.2'
+    classpath 'com.android.tools.build:gradle:8.12.0'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
@@ -22,22 +22,9 @@ def getExtOrIntegerDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['VolumeManager_' + name]).toInteger()
 }
 
-def isNewArchitectureEnabled() {
-  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
-}
-
-def reactNativeArchitectures() {
-  def value = project.getProperties().get("reactNativeArchitectures")
-  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply from: "$projectDir/react-native-helpers.gradle"
-
-if (isNewArchitectureEnabled()) {
-  apply plugin: 'com.facebook.react'
-}
 
 android {
   def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
@@ -54,10 +41,6 @@ android {
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
-    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
-    ndk {
-      abiFilters (*reactNativeArchitectures())
-    }
   }
 
   buildTypes {
@@ -69,8 +52,11 @@ android {
     warningsAsErrors true
   }
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlinOptions {
+    jvmTarget = '17'
   }
 }
 
@@ -147,7 +133,6 @@ repositories {
 def kotlin_version = getExtOrDefault('kotlinVersion')
 
 dependencies {
-  // noinspection GradleDynamicVersion
-  api 'com.facebook.react:react-native:+'
+  api "com.facebook.react:react-android:${getExtOrDefault('reactNativeVersion')}"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

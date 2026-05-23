@@ -1,0 +1,56 @@
+name: NPM Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: Version type to bump
+        required: false
+        type: choice
+        options:
+          - ""
+          - patch
+          - minor
+          - major
+          - prerelease
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump package version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+
+      - name: Typecheck
+        run: yarn typescript
+
+      - name: Bump version
+        uses: phips28/gh-action-bump-version@v11.0.7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag-prefix: v
+          target-branch: main
+          commit-message: "chore: release {{version}} [skip ci]"
+          version-type: ${{ inputs.version_type }}

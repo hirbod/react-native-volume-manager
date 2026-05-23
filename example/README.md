@@ -1,4 +1,4 @@
-# example
+# React Native Volume Manager example
 
 ```
 yarn

@@ -159,8 +159,8 @@ export default function App() {
                 {mode !== undefined
                   ? modeText[mode]
                   : Platform.OS === 'ios'
-                  ? 'Unsupported on iOS'
-                  : 'Unknown'}
+                    ? 'Unsupported on iOS'
+                    : 'Unknown'}
               </Text>
             </View>
 
