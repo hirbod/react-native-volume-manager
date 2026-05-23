@@ -2,275 +2,307 @@
 
 # react-native-volume-manager
 
-Take control of system volume on **iOS** and **Android** with this powerful native package. Seamlessly adjust volume levels, track changes, and design custom sliders for a tailored user experience. With an intuitive API, you can access the current volume, detect the silent switch on iOS, and monitor ringer mode changes on Android.
+Control and observe system volume from React Native on iOS and Android.
+
+Use it to read the current volume, set volume, listen for volume changes, hide the native volume UI for custom controls, detect the iOS silent switch, and work with Android ringer mode.
 
 | ![React Native Volume Manager](ios-preview.gif) | ![React Native Volume Manager](android-preview.gif) |
 | ----------------------------------------------- | --------------------------------------------------- |
 
 ## Features
 
-- Adjust system volume
-- Monitor volume changes
-- Suppress default volume UI
-- Access current volume level
-- Detect silent switch status (iOS)
-- Enable/disable audio session and change category (iOS)
-- Track ringer mode changes (Android)
+- Read and set system volume.
+- Listen for volume changes.
+- Hide the native volume UI when building a custom slider.
+- Detect the iOS silent switch.
+- Manage iOS audio session state and category.
+- Read, set, and observe Android ringer mode.
+- Check and request Android Do Not Disturb access.
+
+## Requirements
+
+- React Native 0.85 or newer is recommended.
+- iOS 15.0 or newer.
+- Android min SDK 24.
+- New Architecture projects are the supported path.
+- Expo requires a custom development build. Expo Go is not supported.
+
+The example app is kept on Expo SDK 56 and React Native 0.85.
 
 ## Installation
-
-Using npm:
-
-```sh
-npm install react-native-volume-manager
-```
-
-Using Yarn:
 
 ```sh
 yarn add react-native-volume-manager
 ```
 
-New and old architecture are supported. React Native 0.76+ is required. iOS 15+ is required.
-If you are using Expo, make sure to use expo-build-properties to set the minimum iOS version to 15. (Default in SDK 52+). Kotlin 1.8+ is required. No support for older versions!
+or:
+
+```sh
+npm install react-native-volume-manager
+```
+
+Install pods after adding the package:
+
+```sh
+cd ios && pod install
+```
+
+For Expo projects, use a development build:
+
+```sh
+npx expo prebuild
+npx expo run:ios
+npx expo run:android
+```
+
+If your Expo app targets iOS below 15.0, raise the deployment target with `expo-build-properties`:
 
 ```json
 [
   "expo-build-properties",
   {
-    "android": {
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
-      "buildToolsVersion": "34.0.0"
-    },
     "ios": {
-      "deploymentTarget": "15.2"
+      "deploymentTarget": "15.0"
     }
   }
 ]
 ```
 
-> Note: This library is incompatible with Expo Go. To use it, you can install a [custom development client](https://docs.expo.dev/develop/development-builds/create-a-build/).
+## Platform Notes
 
-## Simulators / Emulators
+### iOS
 
-- iOS: The AVAudioSession API provides control over audio behaviors and settings on iOS devices. However, hardware-specific features like volume control and audio route selection are unavailable on macOS, where the simulator runs. Consequently, this package only works on a physical device, as events won’t trigger in the simulator.
+Volume control and silent-switch detection require a physical device. The iOS simulator does not expose hardware volume or silent-switch behavior.
 
-- Android: It runs on both a real device (API level 21+) and the emulator (API level 33+).
+### Android
 
-## Web
+Volume control works on emulators and physical devices. Ringer mode and Do Not Disturb behavior can vary by Android version, OEM settings, and granted permissions.
 
-This library is not functional on the web. While the package exports no-op methods for web usage, allowing you to include it without any issues, these methods have no actual effect.
+When `showNativeVolumeUI({ enabled: false })` is used, the module intercepts hardware volume keys while the app is foregrounded so you can build a custom volume UI.
 
-## Usage
+### Web
 
-All methods are available under the `VolumeManager` namespace or can be imported directly. Here are some examples:
+Web is intentionally a no-op. The package can be imported on web, but native volume APIs are not available in browsers.
+
+## Quick Start
 
 ```tsx
 import { VolumeManager } from 'react-native-volume-manager';
 
-// Disable the native volume toast globally (iOS, Android)
-VolumeManager.showNativeVolumeUI({ enabled: true });
-
-// Set the volume (value between 0 and 1)
-await VolumeManager.setVolume(0.5);
-
-// Get the current volume async
+// Read the current volume.
 const { volume } = await VolumeManager.getVolume();
 
-// Listen to volume changes
-const volumeListener = VolumeManager.addVolumeListener((result) => {
-  console.log(result.volume);
+// Set the music volume to 50%.
+await VolumeManager.setVolume(0.5);
 
-  // On Android, additional volume types are available:
-  // music, system, ring, alarm, notification
+// Hide the native volume UI for custom controls.
+await VolumeManager.showNativeVolumeUI({ enabled: false });
+
+// Restore the native volume UI.
+await VolumeManager.showNativeVolumeUI({ enabled: true });
+
+// Listen for volume changes.
+const listener = VolumeManager.addVolumeListener((result) => {
+  console.log(result.volume, result.type);
 });
 
-// Remove the volume listener
-volumeListener.remove();
+listener.remove();
 ```
 
-## iOS Audio Session Management
+On Android, `result.type` can be `music`, `call`, `system`, `ring`, `alarm`, or `notification`.
 
-This section provides methods related to AVAudioSession on iOS. For example:
+## Set a Specific Android Volume Stream
 
 ```tsx
 import { VolumeManager } from 'react-native-volume-manager';
 
-// Enable or disable iOS AudioSession
-VolumeManager.enable(true, true); // Enable async
-VolumeManager.enable(false, true); // Disable async, non-blocking
-
-// Activate or deactivate the audio session
-VolumeManager.setActive(true, true); // Activate async
-VolumeManager.setActive(false, true); // Deactivate async, non-blocking
+await VolumeManager.setVolume(0.25, {
+  type: 'ring',
+  showUI: false,
+  playSound: false,
+});
 ```
 
-## iOS Mute Switch Listener
+## iOS Silent Switch
 
-To monitor the mute switch status on iOS, you can use the following:
+Use `addSilentListener` when you only need a subscription:
 
 ```tsx
 import { VolumeManager } from 'react-native-volume-manager';
 
-const silentListener = VolumeManager.addSilentListener((status) => {
+const listener = VolumeManager.addSilentListener((status) => {
   console.log(status.isMuted);
   console.log(status.initialQuery);
 });
 
-// Remove the silent listener
-silentListener.remove();
+listener.remove();
 ```
 
-## Android Ringer Listener
-
-To listen to ringer mode changes on Android, you can use the following:
+Use `useSilentSwitch` inside React components:
 
 ```tsx
-import { VolumeManager } from 'react-native-volume-manager';
-
-const ringerListener = VolumeManager.addRingerListener((status) => {
-  console.log(status.ringerMode);
-});
-
-// Remove the ringer listener
-VolumeManager.removeRingerListener(ringerListener);
-```
-
-## useSilentSwitch hook
-
-`useSilentSwitch` is a custom React hook that monitors the silent switch on an iOS device. The nativeIntervalCheck parameter (optional) allows you to set the interval at which the silent switch status is checked in seconds. If the parameter is not provided, a default interval is used (2.0).
-
-The hook returns an object with two properties: isMuted (which represents the ring/mute switch position) and initialQuery (which indicates whether the reported status is the first one after the application launch). On non-iOS platforms or for the first call, the hook returns undefined. This hook is only applicable to iOS.
-
-```tsx
-import React from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSilentSwitch } from 'react-native-volume-manager';
 
-export default function App() {
+export function SilentSwitchStatus() {
   const status = useSilentSwitch();
 
   return (
     <View>
-      <Text>Silent Switch Status:</Text>
-      {status ? (
-        <View>
-          <Text>Is Muted: {status.isMuted ? 'YES' : 'NO'}</Text>
-          <Text>Is Initial Query: {status.initialQuery ? 'YES' : 'NO'}</Text>
-        </View>
-      ) : (
-        <Text>Fetching...</Text>
-      )}
+      <Text>
+        Silent switch: {status?.isMuted === true ? 'muted' : 'not muted'}
+      </Text>
     </View>
   );
 }
 ```
 
-In this example, `useSilentSwitch` is used to monitor the status of the silent switch on iOS devices. The status of the switch (`isMuted`) and whether it's the initial query (`initialQuery`) are displayed. If the status is not available yet, "Fetching..." is displayed.
+`useSilentSwitch()` returns `undefined` until the first result is available and always returns `undefined` on non-iOS platforms.
 
-### useRingerMode Hook
-
-You can use the `useRingerMode` hook to get and set the ringer mode on Android:
+You can adjust the native polling interval in seconds:
 
 ```tsx
-import React from 'react';
-import { View, Text, Button } from 'react-native';
+const status = useSilentSwitch(2);
+```
+
+## iOS Audio Session
+
+```tsx
+import { VolumeManager } from 'react-native-volume-manager';
+
+await VolumeManager.enable(true);
+await VolumeManager.setActive(true);
+await VolumeManager.setCategory('Playback', true);
+await VolumeManager.setMode('Default');
+await VolumeManager.enableInSilenceMode(true);
+```
+
+These APIs are iOS-only. On Android, they resolve without changing device state.
+
+## Android Ringer Mode
+
+```tsx
 import {
-  useRingerMode,
   RINGER_MODE,
-  RingerModeType,
+  VolumeManager,
+  useRingerMode,
 } from 'react-native-volume-manager';
 
-const modeText = {
-  [RINGER_MODE.silent]: 'Silent',
-  [RINGER_MODE.normal]: 'Normal',
-  [RINGER_MODE.vibrate]: 'Vibrate',
-};
+const currentMode = await VolumeManager.getRingerMode();
+await VolumeManager.setRingerMode(RINGER_MODE.vibrate);
 
-export default function App() {
+const listener = VolumeManager.addRingerListener((status) => {
+  console.log(status.mode, status.status);
+});
+
+VolumeManager.removeRingerListener(listener);
+```
+
+Use `useRingerMode` inside React components:
+
+```tsx
+import { Button, Text, View } from 'react-native';
+import { RINGER_MODE, useRingerMode } from 'react-native-volume-manager';
+
+export function RingerControls() {
   const { mode, error, setMode } = useRingerMode();
 
   return (
     <View>
-      <Text>Ringer Mode: {mode !== undefined ? modeText[mode] : null}</Text>
-
-      <View>
-        <Button title="Silent" onPress={() => setMode(RINGER_MODE.silent)} />
-        <Button title="Normal" onPress={() => setMode(RINGER_MODE.normal)} />
-        <Button title="Vibrate" onPress={() => setMode(RINGER_MODE.vibrate)} />
-      </View>
-
-      <View>
-        <Text>{error?.message}</Text>
-      </View>
+      <Text>Ringer mode: {mode}</Text>
+      <Button title="Silent" onPress={() => setMode(RINGER_MODE.silent)} />
+      <Button title="Normal" onPress={() => setMode(RINGER_MODE.normal)} />
+      <Button title="Vibrate" onPress={() => setMode(RINGER_MODE.vibrate)} />
+      <Text>{error?.message}</Text>
     </View>
   );
+}
+```
+
+Some ringer-mode changes require Do Not Disturb access:
+
+```tsx
+const hasAccess = await VolumeManager.checkDndAccess();
+
+if (!hasAccess) {
+  await VolumeManager.requestDndAccess();
 }
 ```
 
 ## API
 
-The `VolumeManager` API provides an interface for controlling and observing volume settings on iOS and Android devices. The API is designed to offer a consistent experience across both platforms where possible, with some platform-specific functionality provided where necessary.
+### Cross-platform
 
-### Cross-platform methods:
+| Method | Description |
+| ------ | ----------- |
+| `getVolume()` | Returns the current volume. |
+| `setVolume(value, config?)` | Sets the volume. `value` must be between `0` and `1`. |
+| `showNativeVolumeUI({ enabled })` | Shows or hides the native volume UI. |
+| `addVolumeListener(callback)` | Subscribes to volume changes. |
 
-- `showNativeVolumeUI(config: { enabled: boolean }): Promise<void>`: This asynchronous function allows you to control the visibility of the native volume UI when volume changes occur.
+### iOS
 
-- `getVolume(): Promise<VolumeResult>`: Asynchronously fetches the current volume level and returns a promise that resolves to an object, `VolumeResult`, containing the current volume information.
+| Method | Description |
+| ------ | ----------- |
+| `enable(enabled?, async?)` | Enables or disables the iOS audio session. |
+| `setActive(value?, async?)` | Activates or deactivates the iOS audio session. |
+| `setCategory(value, mixWithOthers?)` | Sets the iOS audio session category. |
+| `setMode(value)` | Sets the iOS audio session mode. |
+| `enableInSilenceMode(enabled?)` | Allows playback while the hardware silent switch is enabled. |
+| `setNativeSilenceCheckInterval(value)` | Sets the native silent-switch polling interval. |
+| `addSilentListener(callback)` | Subscribes to silent-switch changes. |
+| `useSilentSwitch(nativeIntervalCheck?)` | React hook for silent-switch status. |
 
-- `setVolume(value: number, config?: VolumeManagerSetVolumeConfig): Promise<void>`: Allows you to programmatically adjust the device's volume level. The `value` parameter should be between 0 and 1, and `config` parameter is an optional object for additional configuration settings.
+### Android
 
-- `addVolumeListener(callback: (result: VolumeResult) => void): EmitterSubscription`: Allows you to add a listener that will be called when the device's volume changes. The listener receives an object, `VolumeResult`, that contains the updated volume information.
+| Method | Description |
+| ------ | ----------- |
+| `getRingerMode()` | Returns the current ringer mode. |
+| `setRingerMode(mode)` | Sets the ringer mode. |
+| `isAndroidDeviceSilent()` | Checks whether the device is in a silent state. |
+| `addRingerListener(callback)` | Subscribes to ringer-mode changes. |
+| `removeRingerListener(listener)` | Removes a ringer-mode listener. |
+| `checkDndAccess()` | Checks Do Not Disturb access. |
+| `requestDndAccess()` | Opens Android settings for Do Not Disturb access. |
+| `useRingerMode()` | React hook for ringer mode. |
 
-### iOS-only methods:
+## Types
 
-- `enable(enabled: boolean, async: boolean): Promise<void>`: Enables or disables the audio session. Enabling the audio session sets the session's category to 'ambient', allowing it to mix with other audio.
+```tsx
+type AndroidVolumeTypes =
+  | 'music'
+  | 'call'
+  | 'system'
+  | 'ring'
+  | 'alarm'
+  | 'notification';
 
-- `setActive(value: boolean, async: boolean): Promise<void>`: Activates or deactivates the audio session. Deactivating the session reactivates any sessions that were interrupted by this one.
+type VolumeManagerSetVolumeConfig = {
+  playSound?: boolean;
+  type?: AndroidVolumeTypes;
+  showUI?: boolean;
+};
 
-- `setCategory(value: AVAudioSessionCategory, mixWithOthers?: boolean): Promise<void>`: Sets the category for the AVAudioSession in your iOS app. `mixWithOthers` is an optional parameter that, if true, allows your audio to mix with audio from other apps.
+type VolumeResult = {
+  volume: number;
+  type?: AndroidVolumeTypes;
+};
+```
 
-- `setMode(mode: AVAudioSessionMode): Promise<void>`: Sets the mode for the AVAudioSession in your iOS app.
+## Troubleshooting
 
-- `enableInSilenceMode(value: boolean): Promise<void>`: If value is true, this function allows your app to play audio even when the device is in silent mode. When value is false, audio will not play in silent mode.
+### The package is not linked
 
-- `setNativeSilenceCheckInterval(value: number)`: Sets the interval at which the native system checks the state of the silent switch.
+Rebuild the native app after installing the package. For iOS, run `pod install` first.
 
-- `addSilentListener(callback: RingMuteSwitchEventCallback): EmitterSubscription | EmitterSubscriptionNoop`: Adds a listener that will be called when the silent switch state changes.
+### Expo Go does not work
 
-### Android-only methods:
+This package includes native code and requires a custom development build.
 
-- `getRingerMode(): Promise<RingerModeType | undefined>`: Asynchronously fetches the current ringer mode of the device (silent, vibrate, or normal).
+### Android keyboard does not dismiss
 
-- `setRingerMode(mode: RingerModeType): Promise<RingerModeType | undefined>`: Sets the device's ringer mode.
-
-- `isAndroidDeviceSilent(): Promise<boolean | null>`: Asynchronously checks if the device is in a silent state (including silent mode, vibrate mode, or muted volume / do not disturb mode).
-
-- `addRingerListener(callback: RingerEventCallback): EmitterSubscription | EmitterSubscriptionNoop`: Adds a listener that will be called when the ringer mode changes.
-
-- `removeRingerListener(listener: EmitterSubscription | EmitterSubscriptionNoop): void`: Removes a previously added ringer mode listener.
-
-- `checkDndAccess(): Promise<boolean | undefined>`: Asynchronously checks if 'Do Not Disturb' access has been granted.
-
-- `requestDndAccess(): Promise<boolean | undefined>`: Initiates a request for 'Do Not Disturb' access.
-
-Please note that while this API tries to provide a consistent experience across both platforms, some methods are platform-specific due to the differences in how iOS and Android handle
+Use version `2.1.0` or newer. Older versions could install Android focus interception even when the native volume UI was enabled.
 
 ## Contributing
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
-
-## Special thanks
-
-- Uses code from https://github.com/c19354837/react-native-system-setting
-- Uses code from https://github.com/zmxv/react-native-sound
-- Uses code from https://github.com/vitorverasm/react-native-silent
-- Uses code from https://github.com/GeorgyMishin/react-native-silent-listener
-- Fully implements https://github.com/reyhankaplan/react-native-ringer-mode
-
-I used parts, or even the full source code, of these libraries (with plenty of adjustments and rewrites to TypeScript) to make this library work on Android and iOS and to have a mostly unified API that handles everything related to volume. Since many of the packages I found were unmaintained or abandoned and only solved some of the issues, I decided to create my own. I hope you don't mind it and find it useful!
-
-## License
-
-MIT
+See [CONTRIBUTING.md](CONTRIBUTING.md).
