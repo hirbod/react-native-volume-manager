@@ -1,16 +1,11 @@
 {
   "expo": {
-    "name": "volume-manager",
-    "slug": "volume-manager",
+    "name": "volume-manager-example",
+    "slug": "volume-manager-example",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -19,17 +14,28 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hirbod.rnvme"
+      "bundleIdentifier": "com.hirbod.rnvme.example"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.hirbod.rnvme"
+      "package": "com.hirbod.rnvme.example"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-status-bar"
+    ]
   }
 }

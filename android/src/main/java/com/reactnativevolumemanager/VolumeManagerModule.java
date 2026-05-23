@@ -101,11 +101,11 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
    */
   private void setupKeyListener() {
     runOnUiThread(() -> {
+      if (showNativeVolumeUI) return;
       if (hardwareButtonListenerRegistered) return;
-      if (mContext.getCurrentActivity() == null) return;
 
-      Activity activity = mContext.getCurrentActivity();
-      View contentView = activity.findViewById(android.R.id.content);
+      View contentView = getContentView();
+      if (contentView == null) return;
 
       // Handles focus changes between TextInputs and other views
       // Restores volume key functionality when leaving TextInput
@@ -113,7 +113,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
         @Override
         public void onGlobalFocusChanged(View oldFocus, View newFocus) {
           if (oldFocus instanceof EditText && !(newFocus instanceof EditText)) {
-            contentView.requestFocus();
+            safelyRequestFocus(contentView);
           }
         }
       };
@@ -121,7 +121,7 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
       contentView.getViewTreeObserver().addOnGlobalFocusChangeListener(globalFocusListener);
       contentView.setOnKeyListener(null);  // Clear any existing listeners
       contentView.setFocusableInTouchMode(true);
-      contentView.requestFocus();
+      safelyRequestFocus(contentView);
 
       // Handle volume key events when native UI is hidden
       contentView.setOnKeyListener((v, keyCode, event) -> {
@@ -157,20 +157,48 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
   private void cleanupKeyListener() {
     runOnUiThread(() -> {
       if (!hardwareButtonListenerRegistered) return;
-      if (mContext.getCurrentActivity() == null) {
-        hardwareButtonListenerRegistered = false;
-        return;
-      }
 
-      Activity activity = mContext.getCurrentActivity();
-      View contentView = activity.findViewById(android.R.id.content);
+      View contentView = getContentView();
       if (globalFocusListener != null) {
-        contentView.getViewTreeObserver().removeOnGlobalFocusChangeListener(globalFocusListener);
+        if (contentView != null && contentView.getViewTreeObserver().isAlive()) {
+          contentView.getViewTreeObserver().removeOnGlobalFocusChangeListener(globalFocusListener);
+        }
         globalFocusListener = null;
       }
-      contentView.setOnKeyListener(null);
+      if (contentView != null) {
+        contentView.setOnKeyListener(null);
+      }
       hardwareButtonListenerRegistered = false;
     });
+  }
+
+  private View getContentView() {
+    Activity activity = mContext.getCurrentActivity();
+    return activity != null ? activity.findViewById(android.R.id.content) : null;
+  }
+
+  /**
+   * Requests focus defensively to avoid framework/OEM crashes during transient focus states.
+   */
+  private void safelyRequestFocus(View view) {
+    if (view == null || !view.isAttachedToWindow()) return;
+    try {
+      view.requestFocus();
+    } catch (RuntimeException e) {
+      Log.w(TAG, "Ignoring focus request failure", e);
+    }
+  }
+
+  /**
+   * Clears focus defensively to avoid framework/OEM crashes during transient focus states.
+   */
+  private void safelyClearFocus(View view) {
+    if (view == null || !view.isAttachedToWindow()) return;
+    try {
+      view.clearFocus();
+    } catch (RuntimeException e) {
+      Log.w(TAG, "Ignoring focus clear failure", e);
+    }
   }
 
   // React Native methods
@@ -178,7 +206,11 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
   @ReactMethod
   public void showNativeVolumeUI(ReadableMap config) {
     showNativeVolumeUI = config.getBoolean("enabled");
-    setupKeyListener();  // Reset key listener state based on new UI preference
+    if (showNativeVolumeUI) {
+      cleanupKeyListener();
+    } else {
+      setupKeyListener();
+    }
   }
 
   @Override
@@ -348,16 +380,15 @@ public class VolumeManagerModule extends ReactContextBaseJavaModule implements A
    */
   @Override
   public void onHostResume() {
-    runOnUiThread(() -> {
-      Activity activity = mContext.getCurrentActivity();
-      if (activity != null) {
-        View contentView = activity.findViewById(android.R.id.content);
-        contentView.clearFocus();  // Clear existing focus
-        contentView.requestFocus();  // Request fresh focus
-      }
-    });
-    hardwareButtonListenerRegistered = false;  // Force re-setup of listeners
-    setupKeyListener();
+    if (!showNativeVolumeUI) {
+      hardwareButtonListenerRegistered = false;  // Force re-setup of listeners
+      runOnUiThread(() -> {
+        View contentView = getContentView();
+        safelyClearFocus(contentView);  // Clear existing focus defensively
+        safelyRequestFocus(contentView);  // Request fresh focus defensively
+      });
+      setupKeyListener();
+    }
 
     if (volumeMonitoringEnabled) {
       registerVolumeReceiver();

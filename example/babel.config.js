@@ -1,8 +1,9 @@
 const path = require('path');
-const pak = require('../package.json');
+const pkg = require('../package.json');
 
 module.exports = (api) => {
-  api.cache(true)
+  api.cache(true);
+
   return {
     presets: [
       [
@@ -14,12 +15,12 @@ module.exports = (api) => {
       ],
     ],
     plugins: [
-          [
-      'module-resolver',
-      {
-        extensions: ['.tsx', '.ts', '.js', '.json'],
-        alias: {
-            [pak.name]: path.join(__dirname, '..', pak.source),
+      [
+        'module-resolver',
+        {
+          extensions: ['.tsx', '.ts', '.js', '.json'],
+          alias: {
+            [pkg.name]: path.join(__dirname, '..', pkg.source),
           },
         },
       ],
@@ -28,5 +29,5 @@ module.exports = (api) => {
       ['@babel/plugin-transform-private-methods', { loose: true }],
       '@babel/plugin-proposal-export-namespace-from',
     ],
-  }
-}
+  };
+};
