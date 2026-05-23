@@ -9,8 +9,9 @@ const config = getDefaultConfig(projectRoot);
 config.watchFolders = [packageRoot];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
-  path.resolve(packageRoot, 'node_modules'),
 ];
+// Linked package sources must not resolve React from the repo root.
+config.resolver.disableHierarchicalLookup = true;
 config.resolver.extraNodeModules = {
   [pkg.name]: path.join(packageRoot, pkg.source),
   react: path.resolve(projectRoot, 'node_modules/react'),
