@@ -62,8 +62,11 @@ android {
     sourceCompatibility JavaVersion.VERSION_17
     targetCompatibility JavaVersion.VERSION_17
   }
-  kotlinOptions {
-    jvmTarget = '17'
+  // Built-in Kotlin inherits targetCompatibility from compileOptions.
+  if (project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+    kotlinOptions {
+      jvmTarget = '17'
+    }
   }
 }
 
