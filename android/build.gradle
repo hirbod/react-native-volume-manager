@@ -23,7 +23,14 @@ def getExtOrIntegerDefault(name) {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+// AGP 9 ships built-in Kotlin support and registers the `kotlin` extension
+// itself. Applying the Kotlin plugin on top of it fails configuration with
+// "Cannot add extension with name 'kotlin'". Only apply it when nothing has
+// registered that extension yet.
+if (project.extensions.findByName('kotlin') == null) {
+  apply plugin: 'kotlin-android'
+}
+
 apply from: "$projectDir/react-native-helpers.gradle"
 
 android {
@@ -55,8 +62,11 @@ android {
     sourceCompatibility JavaVersion.VERSION_17
     targetCompatibility JavaVersion.VERSION_17
   }
-  kotlinOptions {
-    jvmTarget = '17'
+  // Built-in Kotlin inherits targetCompatibility from compileOptions.
+  if (project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+    kotlinOptions {
+      jvmTarget = '17'
+    }
   }
 }
 
