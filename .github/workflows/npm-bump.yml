@@ -5,36 +5,55 @@ on:
     inputs:
       version_type:
         description: Version type to bump
-        required: false
+        required: true
         type: choice
+        default: patch
         options:
-          - ""
           - patch
           - minor
           - major
           - prerelease
+      dry_run:
+        description: Build and check the package without committing, tagging, or publishing
+        type: boolean
+        default: false
+      force_publish:
+        description: Publish the current package.json version without another version bump
+        type: boolean
+        default: false
+
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   bump:
-    name: Bump package version
+    name: Build and publish package
+    if: github.ref == 'refs/heads/main' || inputs.dry_run
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ inputs.dry_run && github.ref || 'main' }}
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: yarn
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Update npm for trusted publishing
+        run: npm install --global npm@11
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -46,11 +65,57 @@ jobs:
         run: yarn typescript
 
       - name: Bump version
-        uses: phips28/gh-action-bump-version@v11.0.7
+        if: ${{ !inputs.force_publish }}
+        run: npm version "$VERSION_TYPE" --no-git-tag-version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag-prefix: v
-          target-branch: main
-          commit-message: "chore: release {{version}} [skip ci]"
-          version-type: ${{ inputs.version_type }}
+          VERSION_TYPE: ${{ inputs.version_type }}
+
+      - name: Read release version
+        id: release
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then
+            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push version commit and tag
+        if: ${{ !inputs.dry_run }}
+        env:
+          FORCE_PUBLISH: ${{ inputs.force_publish }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ "$FORCE_PUBLISH" != "true" ]]; then
+            git add package.json
+            git commit -m "chore: release $TAG [skip ci]"
+          fi
+          if ! git show-ref --verify --quiet "refs/tags/$TAG"; then
+            git tag "$TAG"
+          fi
+          git push --atomic origin HEAD:main "refs/tags/$TAG"
+
+      # npm uses GitHub's OIDC token; no npm token secret is needed.
+      - name: Publish to npm
+        run: npm publish --access public --tag "$DIST_TAG" ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          DIST_TAG: ${{ steps.release.outputs.dist_tag }}
+
+      - name: Create GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists"
+          elif [[ "$VERSION" == *-* ]]; then
+            gh release create "$TAG" --verify-tag --generate-notes --prerelease
+          else
+            gh release create "$TAG" --verify-tag --generate-notes
+          fi
